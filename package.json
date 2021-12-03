@@ -1,0 +1,26 @@
+{
+  "name": "graphhopper-maps-capacitor",
+  "version": "1.0.0",
+  "description": "A capacitor wrapper around GraphHopper Maps",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/boldtrn/graphhopper-maps-capacitor.git"
+  },
+  "author": "Robin Boldt",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/boldtrn/graphhopper-maps-capacitor/issues"
+  },
+  "homepage": "https://github.com/boldtrn/graphhopper-maps-capacitor#readme",
+  "dependencies": {
+    "@capacitor/android": "^3.3.2",
+    "@capacitor/core": "^3.3.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^3.3.2"
+  }
+}

@@ -1,0 +1,3 @@
+[submodule "graphhopper-maps"]
+	path = graphhopper-maps
+	url = git@github.com:graphhopper/graphhopper-maps.git
