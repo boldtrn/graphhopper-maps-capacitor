@@ -1,6 +1,6 @@
 {
 	"appId": "com.graphhopper.maps",
 	"appName": "GraphHopper Maps",
-	"webDir": "graphhopper-maps/dist",
+	"webDir": "dist",
 	"bundledWebRuntime": false
 }

@@ -1,1 +1,6 @@
-[]
+[
+	{
+		"pkg": "@capacitor-community/text-to-speech",
+		"classpath": "com.getcapacitor.community.tts.TextToSpeechPlugin"
+	}
+]

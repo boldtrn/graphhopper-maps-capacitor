@@ -4,7 +4,9 @@
   "description": "A capacitor wrapper around GraphHopper Maps",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "serve": "webpack serve --config webpack.config.js --mode development",
+    "build": "webpack --config webpack.config.js"
   },
   "repository": {
     "type": "git",
@@ -17,8 +19,10 @@
   },
   "homepage": "https://github.com/boldtrn/graphhopper-maps-capacitor#readme",
   "dependencies": {
+    "@capacitor-community/text-to-speech": "^1.1.1",
     "@capacitor/android": "^3.3.2",
-    "@capacitor/core": "^3.3.2"
+    "@capacitor/core": "^3.3.2",
+    "graphhopper-maps-react": "file:graphhopper-maps"
   },
   "devDependencies": {
     "@capacitor/cli": "^3.3.2"
