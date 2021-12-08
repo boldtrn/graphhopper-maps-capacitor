@@ -30,6 +30,12 @@
 
         </activity>
 
+        <service
+            android:name="com.graphhopper.maps.MainActivity"
+            android:foregroundServiceType="location">
+        <!-- Any inner elements would go here. -->
+        </service>
+        
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
