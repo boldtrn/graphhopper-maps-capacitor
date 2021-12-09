@@ -20,7 +20,7 @@ npm run build
 npx cap sync
 
 # Open Android App
-npx cap run android
+# npx cap run android
 
 # Open in Android Studio
 # npx cap open android
