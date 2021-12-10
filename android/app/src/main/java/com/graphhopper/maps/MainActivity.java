@@ -31,6 +31,12 @@ public class MainActivity extends BridgeActivity {
             // location.
             Logger.debug("GH Android", "Received a location update " + location.toString());
         }
+        
+        // Add default implementation to catch disabled location settings
+        @Override
+        public void onProviderEnabled(String provider) {}
+        @Override
+        public void onProviderDisabled(String provider) {}
     };
 
     @Override

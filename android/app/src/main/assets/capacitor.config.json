@@ -2,5 +2,7 @@
 	"appId": "com.graphhopper.maps",
 	"appName": "GraphHopper Maps",
 	"webDir": "dist",
-	"bundledWebRuntime": false
+	"bundledWebRuntime": false,
+	"loggingBehavior": "production",
+	"appendUserAgent": "gh-maps-capacitor"
 }

@@ -11,9 +11,6 @@ cd ..
 
 npm install
 
-# Install dependencies from GH Maps
-npm install graphhopper-maps/
-
 # Create Dist folder
 npm run build
 
