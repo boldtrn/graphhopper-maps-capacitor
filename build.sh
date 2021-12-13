@@ -14,6 +14,9 @@ npm install
 # Create Dist folder
 npm run build
 
+# Create launch and splash icons
+cordova-res android --skip-config --copy
+
 npx cap sync
 
 # Open Android App
