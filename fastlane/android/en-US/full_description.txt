@@ -1,0 +1,2 @@
+GraphHopper Maps allows you to plan a route using the GraphHopper Routing API.
+You can view the route on the map and can use the navigation feature to follow that route.
