@@ -7,7 +7,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v2
         with:
-          - submodules: 'true'
+          submodules: 'true'
       - name: Run build sh
         run: ./build.sh
       - uses: actions/upload-artifact@v2
