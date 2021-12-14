@@ -7,7 +7,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v2
       - name: Run build sh
-        run: build.sh
+        run: ./build.sh
       - uses: actions/upload-artifact@v2
         with:
           name: app-debug.apk
