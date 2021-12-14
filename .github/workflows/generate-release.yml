@@ -1,0 +1,14 @@
+name: Generate a debug release apk
+on: [push]
+jobs:
+  generate-debug-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Run build sh
+        run: build.sh
+      - uses: actions/upload-artifact@v2
+        with:
+          name: app-debug.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk

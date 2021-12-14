@@ -19,6 +19,11 @@ cordova-res android --skip-config --copy
 
 npx cap sync
 
+# Build Android
+cd android
+./gradlew assembleDebug
+cd ..
+
 # Open Android App
 # npx cap run android
 
