@@ -22,11 +22,13 @@ or debug the app etc.
 
 `npx cap open android`
 
-## Updating Version
+## Release Update Version
 
-Make sure to pull the latest version of the submodule "graphhopper-maps". (Automated build tools should do this anyway)
-
-Open `android/build.grade` and increment the `versionCode` and set the `versionName`. 
-Important for F-Droid: in the [metadata/com.graphhopper.maps.yml](https://gitlab.com/fdroid/fdroiddata/-/blob/master/metadata/com.graphhopper.maps.yml) AutoUpdateMode: Version v%v, so the tag name must be `v<versionName>` 
-
-With the next gradle build, all the version codes and version names in the generated files should get updated as well.
+1. Make sure to pull the latest version of the submodule "graphhopper-maps". (Automated build tools should do this anyway)
+2. Open `android/app/build.grade` and increment the `versionCode` and set the `versionName`. 
+Important for F-Droid: in the [metadata/com.graphhopper.maps.yml](https://gitlab.com/fdroid/fdroiddata/-/blob/master/metadata/com.graphhopper.maps.yml) AutoUpdateMode: Version v%v, so the tag name must be `v<versionName>`
+3. Write changelog in `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt`
+4. Commit
+5. Tag commit
+   1. Create a tag using `git tag -a v1.0.1`
+   2. Push tags `git push origin --tags`
