@@ -3,6 +3,10 @@
 
 ## Install
 
+We provide automatically generated build artifacts for every commit. You can find them in the [actions tab](https://github.com/boldtrn/graphhopper-maps-capacitor/actions).
+
+## Build
+
 Make sure you have all the [required dependencies](https://capacitorjs.com/docs/v2/getting-started/dependencies)
 
 Then run: `./build.sh`
