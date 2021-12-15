@@ -1,1 +1,1 @@
-OSM Maps and Navigation App
+OSM Maps and Navigation App using the GraphHopper Routing API

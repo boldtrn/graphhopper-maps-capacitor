@@ -1,2 +1,17 @@
 GraphHopper Maps allows you to plan a route using the GraphHopper Routing API.
 You can view the route on the map and can use the navigation feature to follow that route.
+
+The GraphHopper Routing API allows you to calculate routes for different modes of transportation including:
+- Car
+- Truck
+- Bicycle
+- Mountainbike
+- Foot
+
+You can also add multiple stops to your route. Use the navigation feature to get guided to your destination.
+
+Please note that this is a highly experimental and prototypical application.
+Please understand that you are using this app at your own risk.
+Instructions provided by this app might be illegal or dangerous, please always follow the local rules and regulations.
+
+We are looking for feedback, please send us an email if you have any feedback: navi-feedback@graphhopper.com

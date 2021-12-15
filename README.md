@@ -21,3 +21,12 @@ or debug the app etc.
 **Open in Android Studio**
 
 `npx cap open android`
+
+## Updating Version
+
+Make sure to pull the latest version of the submodule "graphhopper-maps". (Automated build tools should do this anyway)
+
+Open `android/build.grade` and increment the `versionCode` and set the `versionName`. 
+Important for F-Droid: in the [metadata/com.graphhopper.maps.yml](https://gitlab.com/fdroid/fdroiddata/-/blob/master/metadata/com.graphhopper.maps.yml) AutoUpdateMode: Version v%v, so the tag name must be `v<versionName>` 
+
+With the next gradle build, all the version codes and version names in the generated files should get updated as well.
