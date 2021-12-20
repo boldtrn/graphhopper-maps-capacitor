@@ -1,1 +1,1 @@
-Online Route Planner and experimental Navigation App using GraphHopper
+Online Route Planner and experimental Navigation App using GraphHopper and OpenStreetMap data
