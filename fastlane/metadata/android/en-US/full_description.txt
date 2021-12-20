@@ -1,17 +1,11 @@
-GraphHopper Maps allows you to plan a route using the GraphHopper Routing API.
-You can view the route on the map and can use the navigation feature to follow that route.
+GraphHopper Maps allows you to plan and view a route on a map. It uses OpenStreetMap data and only uses servers from GraphHopper and the map provider (default is MapTiler).
 
-The GraphHopper Routing API allows you to calculate routes for different modes of transportation including:
-- Car
-- Truck
-- Bicycle
-- Mountainbike
-- Foot
+It supports several modes of transport like car, truck, scooter, bicycle, racing bike, mountainbike, hiking and walking. You can add multiple stops to your route and view the road attributes like elevation, surface or max speed on that route (only shown for bigger screens).
 
-You can also add multiple stops to your route. Use the navigation feature to get guided to your destination.
+The turn-by-turn navigation feature guides you to your destination. Please note that this is a highly experimental and prototypical feature.
 
-Please note that this is a highly experimental and prototypical application.
-Please understand that you are using this app at your own risk.
-Instructions provided by this app might be illegal or dangerous, please always follow the local rules and regulations.
+Also please understand that in general you are using this app at your own risk. Instructions provided by this app might be illegal or dangerous, please always follow the local rules and regulations.
 
-We are looking for feedback, please send us an email if you have any feedback: navi-feedback@graphhopper.com
+You can also host the complete stack on your own as it is fully open source. See github.com/graphhopper/graphhopper, openmaptiles.org and github.com/komoot/photon.
+
+If you have any feedback, please send us an email to navi-feedback@graphhopper.com and include the version. If possible update to the most recent app version and include the log information.
