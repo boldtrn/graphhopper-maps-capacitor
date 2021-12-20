@@ -1,5 +1,5 @@
 # Graphhopper Maps Capacitor
-[Capacitor](https://capacitorjs.com/) Wrapper for [GraphHopper Maps](https://github.com/graphhopper/graphhopper-maps)
+[Capacitor](https://capacitorjs.com/) wrapper for the `navi` branch of [GraphHopper Maps](https://github.com/graphhopper/graphhopper-maps)
 
 ## Install
 
