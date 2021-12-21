@@ -6,6 +6,13 @@ This Android app is currently a [capacitor](https://capacitorjs.com/)-wrapper fo
 
 We provide automatically generated build artifacts for every commit. You can find them in the [actions tab](https://github.com/boldtrn/graphhopper-maps-capacitor/actions).
 
+Otherwise, you can download stable versions on F-Droid:
+
+
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
+     alt="Get it on F-Droid"
+     height="80">](https://f-droid.org/packages/com.graphhopper.maps/)
+
 ## Build
 
 Make sure you have all the [required dependencies](https://capacitorjs.com/docs/v2/getting-started/dependencies)
