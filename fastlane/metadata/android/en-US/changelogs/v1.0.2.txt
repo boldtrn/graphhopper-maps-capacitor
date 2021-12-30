@@ -1,0 +1,3 @@
+ * Fixed bug regarding Finnish translation
+ * Update description
+ * Text in debug panel larger
