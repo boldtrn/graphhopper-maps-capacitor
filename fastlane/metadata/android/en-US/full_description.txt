@@ -4,8 +4,10 @@ It supports several modes of transport like car, truck, scooter, bicycle, racing
 
 The turn-by-turn navigation feature guides you to your destination. Please note that this is a highly experimental and prototypical feature.
 
-Also please understand that in general you are using this app at your own risk. Instructions provided by this app might be illegal or dangerous, please always follow the local rules and regulations.
+Also please understand that you are using this app at your own risk and it comes WITHOUT WARRANTIES. Instructions provided by this app might be illegal or dangerous, please always follow the local rules and regulations. See the Apache license 2.0 for more details.
 
-You can also host the complete stack on your own as it is fully open source. See github.com/graphhopper/graphhopper, openmaptiles.org and github.com/komoot/photon.
+You can host the complete stack of this app on your own as it is fully open source. See github.com/graphhopper/graphhopper for the routing engine (Java), openmaptiles.org for the map tiles (Python, PLpgSQL) and github.com/komoot/photon for the geocoding (Java).
 
-If you have any feedback, please send us an email to navi-feedback@graphhopper.com and include the version. If possible update to the most recent app version and include the log information.
+As the route planner app itself is written in TypeScript it is easy to contribute - feel free to submit your code changes.
+
+We welcome your feedback at github.com/boldtrn/graphhopper-maps-capacitor or send us an email: navi-feedback@graphhopper.com. Please include the version and if possible update to the most recent app version and include the log information.
