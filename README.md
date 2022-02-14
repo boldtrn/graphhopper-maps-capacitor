@@ -13,22 +13,33 @@ Otherwise, you can download stable versions on F-Droid:
      alt="Get it on F-Droid"
      height="80">](https://f-droid.org/packages/com.graphhopper.maps/)
 
-## Build
+## Development
 
-Make sure you have all the [required dependencies](https://capacitorjs.com/docs/v2/getting-started/dependencies)
+### Clone the repository
+``` bash
+git clone --recursive https://github.com/boldtrn/graphhopper-maps-capacitor.git
+```
 
-Then run: `./build.sh`
+### Build the project
+Make sure you have all the [required dependencies for Capacitor](https://capacitorjs.com/docs/v2/getting-started/dependencies).
 
+``` bash
+./build.sh
+```
+
+### Run the project
 Note: you can either run the app straight away or open it in Android Studio. You can generate an APK in Android Studio,
 or debug the app etc.
 
-**Open Android App**
+#### Open Android App
+``` bash
+npx cap run android
+```
 
-`npx cap run android`
-
-**Open in Android Studio**
-
-`npx cap open android`
+#### Open in Android Studio
+``` bash
+npx cap open android
+```
 
 ## Release Update Version
 
