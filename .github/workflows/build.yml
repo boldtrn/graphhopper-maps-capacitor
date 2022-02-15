@@ -13,6 +13,7 @@ jobs:
         with:
           node-version: '12'
           cache: 'npm'
+          cache-dependency-path: graphhopper-maps/package-lock.json
       - name: Install and build graphhopper-maps submodule
         working-directory: ./graphhopper-maps
         run: |
