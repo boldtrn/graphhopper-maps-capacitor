@@ -15,7 +15,7 @@ npm install
 npm run build
 
 # Create launch and splash icons
-cordova-res android --skip-config --copy
+npx cordova-res android --skip-config --copy
 
 npx cap sync
 
