@@ -11,7 +11,7 @@ jobs:
           submodules: 'true'
       - uses: actions/setup-node@v2
         with:
-          node-version: '12'
+          node-version: '16'
           cache: 'npm'
           cache-dependency-path: graphhopper-maps/package-lock.json
       - name: Install and build graphhopper-maps submodule
