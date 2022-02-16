@@ -14,7 +14,9 @@ jobs:
           node-version: '16'
           cache: 'npm'
           cache-dependency-path: graphhopper-maps/package-lock.json
-      - name: Install and build graphhopper-maps submodule
+      - name: Install dependencies
+        run: npm ci
+      - name: Build graphhopper-maps submodule
         working-directory: ./graphhopper-maps
         run: |
           cp ../config.js .
@@ -23,9 +25,7 @@ jobs:
           # cat package.json
           # npm ci
           npm run build
-      - name: Install dependencies
-        run: npm ci
-      - name: Build node package
+      - name: Build main project
         run: npm run build
       - name: Create launch and splash icons
         run: npx cordova-res android --skip-config --copy
