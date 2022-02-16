@@ -22,7 +22,7 @@ jobs:
           # rm package-lock.json
           # cat package.json
           # npm ci
-          # npm run build
+          npm run build
       - name: Install dependencies
         run: npm ci
       - name: Build node package
