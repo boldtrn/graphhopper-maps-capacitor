@@ -20,10 +20,6 @@ jobs:
         working-directory: ./graphhopper-maps
         run: |
           cp ../config.js .
-          # sed -i 's/github:easbar\/Leaflet.Heightgraph#82cff7b3013dd73d7221521c5b404ded6439e050/1.4.0/g' package.json
-          # rm package-lock.json
-          # cat package.json
-          # npm ci
           npm run build
       - name: Build main project
         run: npm run build
@@ -31,6 +27,6 @@ jobs:
         run: npx cordova-res android --skip-config --copy
       - name: npx cap sync
         run: npx cap sync
-      - name: Build the android app
+      - name: Build android app
         working-directory: ./android
         run: ./gradlew assembleDebug
