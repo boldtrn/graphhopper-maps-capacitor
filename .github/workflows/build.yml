@@ -1,0 +1,32 @@
+name: Build the application
+
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'true'
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+          cache: 'npm'
+          cache-dependency-path: graphhopper-maps/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Build graphhopper-maps submodule
+        working-directory: ./graphhopper-maps
+        run: |
+          cp ../config.js .
+          npm run build
+      - name: Build main project
+        run: npm run build
+      - name: Create launch and splash icons
+        run: npx cordova-res android --skip-config --copy
+      - name: npx cap sync
+        run: npx cap sync
+      - name: Build android app
+        working-directory: ./android
+        run: ./gradlew assembleDebug
