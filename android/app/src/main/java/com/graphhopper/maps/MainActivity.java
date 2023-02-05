@@ -6,10 +6,8 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.location.LocationProvider;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Message;
 
 import androidx.core.app.ActivityCompat;
 
@@ -78,11 +76,13 @@ public class MainActivity extends BridgeActivity {
 
     private void requestLocationUpdates() {
         // Request permission, if it is not yet provided
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // Requires at least Marshmallow
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
-            }
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                // TODO NOW infinite loop if no GPS was enabled -> why is this necessary at all?
+//                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
+//            }
             Logger.warn("GH Android", "No location permission available");
             return;
         }
