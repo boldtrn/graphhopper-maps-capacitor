@@ -22,7 +22,9 @@ jobs:
           cp ../config.js .
           npm run build
       - name: Build main project
-        run: npm run build
+        run: |
+          npm run build
+          cp config.js dist/
       - name: Create launch and splash icons
         run: npx cordova-res android --skip-config --copy
       - name: npx cap sync
