@@ -1,6 +1,6 @@
 {
   "name": "graphhopper-maps-capacitor",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A capacitor wrapper around GraphHopper Maps",
   "main": "index.js",
   "scripts": {
@@ -19,17 +19,17 @@
   },
   "homepage": "https://github.com/boldtrn/graphhopper-maps-capacitor#readme",
   "dependencies": {
-    "@capacitor-community/text-to-speech": "^1.1.1",
-    "@capacitor/android": "^3.3.2",
-    "@capacitor/core": "^3.3.2",
+    "@capacitor-community/text-to-speech": "^2.0.1",
+    "@capacitor/android": "^4.6.3",
+    "@capacitor/core": "^4.6.3",
     "graphhopper-maps-react": "file:graphhopper-maps"
   },
   "devDependencies": {
-    "@capacitor/cli": "^3.3.2",
+    "@capacitor/assets": "^2.0.4",
+    "@capacitor/cli": "^4.6.3",
     "html-webpack-plugin": "^5.5.0",
     "webpack": "^5.64.2",
     "webpack-cli": "^4.9.1",
-    "webpack-dev-server": "^4.5.0",
-    "cordova-res": "^0.15.4"
+    "webpack-dev-server": "^4.5.0"
   }
 }
