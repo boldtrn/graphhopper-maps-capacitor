@@ -27,7 +27,7 @@ jobs:
           npm run build
           cp config.js dist/
       - name: Create launch and splash icons
-        run: npx cordova-res android --skip-config --copy
+        run: npx capacitor-assets generate --android --iconBackgroundColor '#eeeeee' --iconBackgroundColorDark '#222222' --splashBackgroundColor '#ffffff' --splashBackgroundColorDark '#ffffff'
       - name: npx cap sync
         run: npx cap sync
       - name: Build android app
