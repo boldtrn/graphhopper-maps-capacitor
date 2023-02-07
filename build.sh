@@ -19,7 +19,7 @@ npm run build
 cp config.js dist/
 
 # Create launch and splash icons
-npx cordova-res android --skip-config --copy
+npx capacitor-assets generate --android --iconBackgroundColor '#eeeeee' --iconBackgroundColorDark '#222222' --splashBackgroundColor '#ffffff' --splashBackgroundColorDark '#ffffff'
 
 npx cap sync
 

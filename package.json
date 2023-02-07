@@ -25,8 +25,8 @@
     "graphhopper-maps-react": "file:graphhopper-maps"
   },
   "devDependencies": {
+    "@capacitor/assets": "^2.0.4",
     "@capacitor/cli": "^4.6.3",
-    "cordova-res": "^0.15.4",
     "html-webpack-plugin": "^5.5.0",
     "webpack": "^5.64.2",
     "webpack-cli": "^4.9.1",
