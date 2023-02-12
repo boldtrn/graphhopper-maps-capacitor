@@ -44,8 +44,9 @@ npx cap open android
 ## Release Update Version
 
 1. Make sure to pull the latest version of the submodule "graphhopper-maps". (Automated build tools should do this anyway)
-2. Open `android/app/build.gradle` and increment the `versionCode` and set the `versionName`. 
-Important for F-Droid: in the [metadata/com.graphhopper.maps.yml](https://gitlab.com/fdroid/fdroiddata/-/blob/master/metadata/com.graphhopper.maps.yml) AutoUpdateMode: Version v%v, so the tag name must be `v<versionName>`
+2. Open `android/app/build.gradle` and increment the `versionCode` and set the `versionName`.
+Note that the tag name must be `v<versionName>` because in F-Droid they require this in the [metadata/com.graphhopper.maps.yml](https://gitlab.com/fdroid/fdroiddata/-/blob/master/metadata/com.graphhopper.maps.yml)
+-> (AutoUpdateMode: Version v%v).
 3. Write changelog in `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt`
 4. Commit
 5. Tag commit

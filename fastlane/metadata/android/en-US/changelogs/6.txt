@@ -1,0 +1,27 @@
+route planning:
+
+ * GPX export
+ * simpler change of routing profile possible
+ * switch between km and miles
+ * changing order of locations is possible via long press and destination selection
+ * in address search 'nominatim' is provided as fallback (last list entry)
+ * zoom buttons on map
+ * query OpenStreetMap for location (via right click -> menu)
+ * improved translation
+ * with hints like 'crosses country' or 'route includes ferry'
+ * on larger screens a routing profile customization is possible (via gear button)
+ * on larger screens closing of sidebar is possible
+
+navigation:
+
+ * re-routing now works, also with via points
+ * smoother change of arrow while routing
+ * replaced 'hacky' implementation
+
+other changes:
+
+ * switched from MapLibre GL JS to Openlayers due to performance and quality
+   problems with raster tiles
+ * dependencies updated
+ * code clean up
+ * more bug fixes and tests
