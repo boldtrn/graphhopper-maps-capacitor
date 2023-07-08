@@ -6,7 +6,7 @@ cp config.js graphhopper-maps/
 cd graphhopper-maps
 npm install
 rm dist/bundle*js
-npm run build
+npm run fdroid
 # we have a unique ID attached to the bundle file due to caching; remove this here
 mv dist/bundle.*.js dist/bundle.js
 cd ..

@@ -20,7 +20,7 @@ jobs:
         working-directory: ./graphhopper-maps
         run: |
           cp ../config.js .
-          npm run build
+          npm run fdroid
           mv dist/bundle.*.js dist/bundle.js
       - name: Build main project
         run: |
