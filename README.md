@@ -1,4 +1,4 @@
-# Graphhopper Maps Capacitor
+# Graphhopper Maps with GPS Navigation
 
 This Android app is currently a [capacitor](https://capacitorjs.com/)-wrapper for the `navi` branch of [GraphHopper Maps](https://github.com/graphhopper/graphhopper-maps). There are many known limitations for the turn-by-turn navigation feature (as it happens in the browser) and if it is not possible to fix them in the browser we can fix them here.
 
