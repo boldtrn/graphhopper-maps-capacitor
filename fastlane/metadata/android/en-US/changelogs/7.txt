@@ -1,0 +1,12 @@
+bug fixes
+
+route planning:
+
+ * share route link with others via navi.graphhopper.org
+ * better investigation of route attributes (only landscape)
+
+navigation:
+
+ * fix early announcement more frequent
+ * improved font size for smaller screens
+ * fix offset for landscape orientation
