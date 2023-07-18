@@ -1,1 +1,1 @@
-Online Route Planner and experimental Navigation App using GraphHopper and OSM
+Online route planner and experimental GPS navigation
