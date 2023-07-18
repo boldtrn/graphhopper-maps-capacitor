@@ -1,13 +1,9 @@
-GraphHopper Maps allows you to plan and view a route on a map. It uses OpenStreetMap data and only uses servers from GraphHopper and the map provider (default is MapTiler).
+GraphHopper Maps is an online route planner based on OpenStreetMap data and open source software. It calculates routes and alternatives very fast. It supports several modes of transport like car, bike, hiking, walking and more. You can add multiple stops to your route and on bigger screens view the road attributes like elevation, surface or max speed for that route.
 
-It supports several modes of transport like car, truck, scooter, bicycle, racing bike, mountainbike, hiking and walking. You can add multiple stops to your route and view the road attributes like elevation, surface or max speed on that route (only shown for bigger screens).
+Read more: https://www.graphhopper.com/maps-route-planner/
 
-The turn-by-turn navigation feature guides you to your destination. Please note that this is a highly experimental and prototypical feature.
+After you calculated the route and your GPS location is enabled you can start the GPS navigation which guides you to your destination. Note, that this is an experimental feature. Understand that you are using this free application at your own risk and it comes WITHOUT WARRANTIES. See the Apache license 2.0 for more details. The provided instructions might be illegal or dangerous. Please always follow the local rules and regulations.
 
-Also please understand that you are using this app at your own risk and it comes WITHOUT WARRANTIES. Instructions provided by this app might be illegal or dangerous, please always follow the local rules and regulations. See the Apache license 2.0 for more details.
+As GraphHopper is open source you can host the complete stack on your own servers. See github.com/graphhopper/graphhopper for the routing engine, github.com/onthegomap/planetiler for the map tiles, github.com/komoot/photon for the geocoding and github.com/boldtrn/graphhopper-maps-capacitor for the front end.
 
-You can host the complete stack of this app on your own as it is fully open source. See github.com/graphhopper/graphhopper for the routing engine (Java), openmaptiles.org for the map tiles (Python, PLpgSQL) and github.com/komoot/photon for the geocoding (Java).
-
-As the route planner app itself is written in TypeScript it is easy to contribute - feel free to submit your code changes.
-
-We welcome your feedback at github.com/boldtrn/graphhopper-maps-capacitor or send us an email: navi-feedback@graphhopper.com. Please include the version and if possible update to the most recent app version and include the log information.
+If there is an issue please use the issue tracker of the front end or send us an email: navi-feedback@graphhopper.com. Please include the version and if possible use the most recent application version and include the log information.
