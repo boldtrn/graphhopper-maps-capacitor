@@ -1,5 +1,7 @@
 import {Capacitor} from '@capacitor/core';
 import {TextToSpeech} from '@capacitor-community/text-to-speech';
+import {Clipboard} from '@capacitor/clipboard';
+import {Share} from '@capacitor/share';
 
 console.info(`GH Maps`, 'Loaded App.js');
 
@@ -39,6 +41,12 @@ if (Capacitor.isNativePlatform()) {
             lang: 'en-US',
         }
     }
+
+    window.navigator.clipboard.writeText = (text) => {
+        return Clipboard.write({ string: text })
+    }
+
+    window.navigator.share = Share.share
 }
 
 // We use require to make sure that gh is loaded after we init our script, import does not guarantee order

@@ -22,6 +22,8 @@
     "@capacitor-community/text-to-speech": "^2.0.1",
     "@capacitor/android": "^4.6.3",
     "@capacitor/core": "^4.6.3",
+    "@capacitor/share": "^4.1.1",
+    "@capacitor/clipboard": "^4.1.0",
     "graphhopper-maps-react": "file:graphhopper-maps"
   },
   "devDependencies": {
