@@ -1,7 +1,8 @@
-import {Capacitor} from '@capacitor/core';
-import {TextToSpeech} from '@capacitor-community/text-to-speech';
-import {Clipboard} from '@capacitor/clipboard';
-import {Share} from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem } from '@capacitor/filesystem';
+import { TextToSpeech } from '@capacitor-community/text-to-speech';
+import { Clipboard } from '@capacitor/clipboard';
+import { Share } from '@capacitor/share';
 
 console.info(`GH Maps`, 'Loaded App.js');
 
@@ -47,6 +48,29 @@ if (Capacitor.isNativePlatform()) {
     }
 
     window.navigator.share = Share.share
+
+    // Overwrite the experimental showSaveFilePicker function to make GPX download working for CapacitorJS.
+    // The 'fileContents' parameter is not part of the normal API but we pass it along in RoutingResults.tsx to make it working.
+    window.showSaveFilePicker = ({ suggestedName, types, fileContents }) => {
+        try {
+          Filesystem.writeFile({
+            path: suggestedName,
+            data: fileContents,
+            directory: 'CACHE',
+            encoding: 'utf8',
+          })
+          .then((writeFileResult) => {
+              if (writeFileResult)
+                  Share.share({ url: writeFileResult.uri })
+              else
+                  console.error('writeFileResult is not defined')
+          })
+
+          console.info('File written successfully.');
+        } catch (error) {
+          console.error('Error writing file:', error);
+        }
+    }
 }
 
 // We use require to make sure that gh is loaded after we init our script, import does not guarantee order

@@ -24,6 +24,7 @@
     "@capacitor/core": "^4.6.3",
     "@capacitor/share": "^4.1.1",
     "@capacitor/clipboard": "^4.1.0",
+    "@capacitor/filesystem": "^4.1.5",
     "graphhopper-maps-react": "file:graphhopper-maps"
   },
   "devDependencies": {
