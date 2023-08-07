@@ -49,12 +49,11 @@ if (Capacitor.isNativePlatform()) {
 
     window.navigator.share = Share.share
 
-    // Overwrite the experimental showSaveFilePicker function to make GPX download working for CapacitorJS.
-    // The 'fileContents' parameter is not part of the normal API but we pass it along in RoutingResults.tsx to make it working.
-    window.showSaveFilePicker = ({ suggestedName, types, fileContents }) => {
+    // assign method for GPX download
+    window.ghSaveFile = ({ fileName, mimeType, fileContents }) => {
         try {
           Filesystem.writeFile({
-            path: suggestedName,
+            path: fileName,
             data: fileContents,
             directory: 'CACHE',
             encoding: 'utf8',
