@@ -1,0 +1,7 @@
+minor address search fix
+
+UI fixes:
+
+ * fix download GPX button
+ * fix copy link (in settings)
+ * remove unnecessary map layers
