@@ -1,0 +1,11 @@
+navigation:
+
+ * when navigation stops it should properly position the map
+ * more flexible speed-dependent zoom
+ * better instruction selection (including heading) in ambigous situations e.g. when on a bridge
+
+map:
+
+ * more space for the map on smaller devices
+ * address input with a separate clear button
+ * suggestion bug fix for landscape mode
