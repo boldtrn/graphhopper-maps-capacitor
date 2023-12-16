@@ -1,0 +1,3 @@
+ * GPX export is now configurable
+ * fix problems with larger touch devices
+ * improved translation
