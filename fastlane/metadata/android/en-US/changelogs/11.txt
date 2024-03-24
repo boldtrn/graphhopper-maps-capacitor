@@ -1,0 +1,14 @@
+navigation:
+
+* show motorway_junction while navigation
+
+routing:
+
+* show conditional access restrictions instead of blocking access
+* bug fixes
+
+UI:
+
+* new profiles carousel (#368)
+* improved examples for custom model
+* updated translations
