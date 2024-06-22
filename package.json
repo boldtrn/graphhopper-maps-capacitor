@@ -19,20 +19,20 @@
   },
   "homepage": "https://github.com/boldtrn/graphhopper-maps-capacitor#readme",
   "dependencies": {
-    "@capacitor-community/text-to-speech": "^2.0.1",
-    "@capacitor/android": "^4.6.3",
-    "@capacitor/core": "^4.6.3",
-    "@capacitor/share": "^4.1.1",
-    "@capacitor/clipboard": "^4.1.0",
-    "@capacitor/filesystem": "^4.1.5",
+    "@capacitor-community/text-to-speech": "^4.0.1",
+    "@capacitor/android": "^6.1.0",
+    "@capacitor/core": "^6.1.0",
+    "@capacitor/share": "^6.0.1",
+    "@capacitor/clipboard": "^6.0.0",
+    "@capacitor/filesystem": "^6.0.0",
     "graphhopper-maps-react": "file:graphhopper-maps"
   },
   "devDependencies": {
-    "@capacitor/assets": "^2.0.4",
-    "@capacitor/cli": "^4.6.3",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^6.1.0",
     "html-webpack-plugin": "^5.5.0",
-    "webpack": "^5.64.2",
-    "webpack-cli": "^4.9.1",
-    "webpack-dev-server": "^4.5.0"
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
+    "webpack-dev-server": "^4.11.1"
   }
 }

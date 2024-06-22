@@ -11,7 +11,7 @@ const config = {
      "graphhopper":"2b68713e-e80d-4f3d-8ddb-e3fcf72d8eac",
      "maptiler":"_undefined_",
      "omniscale":"_undefined_",
-     "thunderforest":"_undefined_",
+     "thunderforest":"95b7c76e19c04e36ab9756f2cdf15b32",
      "kurviger":"b582abd4-d55d-4cb1-8f34-f4254cd52aa7"
     },
     // if true there will be an option to enable the GraphHopper routing graph and the urban density visualization in the layers menu
@@ -31,5 +31,9 @@ const config = {
         ],
         snapPreventions: ['ferry'],
     },
-    profiles: { car:{}, small_truck:{}, truck:{}, scooter:{}, foot:{}, hike:{}, bike:{details: ['get_off_bike', 'bike_network']}, mtb:{details: ['get_off_bike', 'bike_network']}, racingbike:{details: ['get_off_bike', 'bike_network']} },
+    profiles: {
+      car:{}, small_truck:{}, truck:{}, scooter:{},
+      foot:{ details: ['foot_network', 'access_conditional', 'foot_conditional', 'hike_rating'] }, hike:{ details: ['foot_network', 'access_conditional', 'foot_conditional', 'hike_rating' ] },
+      bike:{ details: ['get_off_bike', 'bike_network', 'access_conditional', 'bike_conditional', 'mtb_rating' ] }, mtb:{ details: ['get_off_bike', 'bike_network', 'access_conditional', 'bike_conditional', 'mtb_rating'] }, racingbike:{ details: ['get_off_bike', 'bike_network', 'access_conditional', 'bike_conditional', 'mtb_rating'] },
+    },
 }
