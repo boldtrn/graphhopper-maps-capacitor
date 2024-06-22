@@ -1,0 +1,1 @@
+Updated several dependencies. Now minimum Android 5.1 is required.
