@@ -1,0 +1,4 @@
+Improved route planner experience due to two changes to the context menu:
+
+1. a new action 'add location'
+2. there is no automated zoom anymore that zooms out to the route extent
