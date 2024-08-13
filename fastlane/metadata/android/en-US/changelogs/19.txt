@@ -1,0 +1,14 @@
+The search got two bigger changes:
+
+1. a new POI search feature. E.g. searching 'restaurants berlin' or zoom in and
+search just 'restaurants'. Other words are: bank, atm, hotel, parking,
+airport, bus stop, education, hospital, leisure, museum, parks, pharmacy,
+playground, public transit, train, railway station, school, super market,
+tourism, police, gas station, post, post box, charging, charging station,
+shop, toilet, water.
+
+2. the address search was improved and results in the current view are
+preferred. And nominatim search is now triggered if 'Enter' is pressed -
+there is no separate suggestion item anymore.
+
+A new entry 'zoom to route' was added.
