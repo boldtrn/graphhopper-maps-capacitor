@@ -1,0 +1,1 @@
+improvement for desktop: current location item is inside input
