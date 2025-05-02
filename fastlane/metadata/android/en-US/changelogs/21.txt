@@ -1,0 +1,3 @@
+new options under 'settings':
+   - avoid motorways, tolls, ferries for car
+   - e-cargo bike profile under road bike profile
