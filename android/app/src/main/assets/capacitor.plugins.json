@@ -4,15 +4,15 @@
 		"classpath": "com.getcapacitor.community.tts.TextToSpeechPlugin"
 	},
 	{
-		"pkg": "@capacitor/share",
-		"classpath": "com.capacitorjs.plugins.share.SharePlugin"
-	},
-	{
 		"pkg": "@capacitor/clipboard",
 		"classpath": "com.capacitorjs.plugins.clipboard.ClipboardPlugin"
 	},
 	{
 		"pkg": "@capacitor/filesystem",
 		"classpath": "com.capacitorjs.plugins.filesystem.FilesystemPlugin"
+	},
+	{
+		"pkg": "@capacitor/share",
+		"classpath": "com.capacitorjs.plugins.share.SharePlugin"
 	}
 ]

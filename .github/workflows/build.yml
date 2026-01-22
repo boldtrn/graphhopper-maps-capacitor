@@ -11,7 +11,7 @@ jobs:
           submodules: 'true'
       - uses: actions/setup-node@v4
         with:
-          node-version: 'v20.14.0'
+          node-version: v24.12.0
           cache: 'npm'
           cache-dependency-path: graphhopper-maps/package-lock.json
       - name: Install dependencies
