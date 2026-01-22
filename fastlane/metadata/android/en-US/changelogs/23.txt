@@ -1,0 +1,2 @@
+ * fixed status bar (moved lower if notch)
+ * upgraded to capacitor framework 8
