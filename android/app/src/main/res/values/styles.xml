@@ -18,6 +18,5 @@
 
     <style name="AppTheme.NoActionBarLaunch" parent="AppTheme.NoActionBar">
         <item name="android:background">@drawable/splash</item>
-        <item name="android:windowLayoutInDisplayCutoutMode">never</item>
     </style>
 </resources>
