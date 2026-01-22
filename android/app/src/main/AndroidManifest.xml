@@ -20,7 +20,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:exported="true"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
             android:name="com.graphhopper.maps.MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBarLaunch"
@@ -30,10 +30,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <service android:name="com.graphhopper.maps.MainActivity" android:foregroundServiceType="location">
-            <!-- Any inner elements would go here. -->
-        </service>
 
         <provider
             android:name="androidx.core.content.FileProvider"
