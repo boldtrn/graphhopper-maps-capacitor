@@ -1,0 +1,5 @@
+ * current location tracking without navigation button
+ * highlight critical hints with orange
+ * consider roundabout exit instruction
+ * minor POI search updates
+ * update to more recent versions
