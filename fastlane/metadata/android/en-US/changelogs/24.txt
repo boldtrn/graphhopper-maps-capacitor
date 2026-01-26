@@ -1,0 +1,2 @@
+ * use native screen wake lock
+ * no fullscreen by default when navigating
