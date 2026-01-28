@@ -3,6 +3,7 @@ import { Filesystem } from '@capacitor/filesystem';
 import { TextToSpeech } from '@capacitor-community/text-to-speech';
 import { Clipboard } from '@capacitor/clipboard';
 import { Share } from '@capacitor/share';
+import { MapLibreNavigation } from 'capacitor-maplibre-navigation';
 
 console.info(`GH Maps`, 'Loaded App.js');
 
@@ -70,6 +71,36 @@ if (Capacitor.isNativePlatform()) {
           console.error('Error writing file:', error);
         }
     }
+
+    // Native MapLibre navigation implementation
+    let onCloseCallback = null;
+
+    MapLibreNavigation.addListener('navigationClosed', () => {
+        console.info('GH Maps Navigation', 'Navigation closed by user');
+        if (onCloseCallback) {
+            onCloseCallback();
+            onCloseCallback = null;
+        }
+    });
+
+    window.ghNativeNavigation = {
+        start(path, onClose) {
+            const coordinates = path.points.coordinates.map(c => [c[0], c[1]]);
+            const bbox = path.bbox;
+            const bounds = [[bbox[0], bbox[1]], [bbox[2], bbox[3]]];
+
+            console.info('GH Maps Navigation', 'Starting with', coordinates.length, 'points');
+            onCloseCallback = onClose;
+
+            MapLibreNavigation.startNavigation({ coordinates, bounds })
+                .catch((error) => console.error('GH Maps Navigation', 'Failed to start:', error));
+        },
+        stop() {
+            console.info('GH Maps Navigation', 'Stopping');
+            MapLibreNavigation.stopNavigation()
+                .catch((error) => console.error('GH Maps Navigation', 'Failed to stop:', error));
+        }
+    };
 }
 
 // We use require to make sure that gh is loaded after we init our script, import does not guarantee order

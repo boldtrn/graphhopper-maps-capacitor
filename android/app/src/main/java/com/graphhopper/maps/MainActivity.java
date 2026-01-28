@@ -9,14 +9,15 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
-import android.os.Bundle;
 import android.view.WindowManager;
 
 import com.getcapacitor.BridgeActivity;
+import com.graphhopper.navigationplugin.MapLibreNavigationPlugin;
 
 public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        registerPlugin(MapLibreNavigationPlugin.class);
         super.onCreate(savedInstanceState);
 
         // Keep screen on for the entire app (navigation use case)
