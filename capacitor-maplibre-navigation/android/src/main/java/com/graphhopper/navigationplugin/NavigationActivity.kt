@@ -367,11 +367,11 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 }
             }
 
-            // Setup location component for navigation puck
-            setupLocationComponent(style)
-
-            // Draw route on map
+            // Draw route on map first so the location puck renders on top
             drawRoute(style, currentRoute!!)
+
+            // Setup location component for navigation puck (after route layer)
+            setupLocationComponent(style)
 
             // Fit camera to route
             fitCameraToRoute(currentRoute!!)
@@ -422,7 +422,7 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         style.addLayer(
             LineLayer(ROUTE_LAYER_ID, ROUTE_SOURCE_ID).apply {
                 setProperties(
-                    lineColor(Color.parseColor("#2962FF")),
+                    lineColor(Color.parseColor("#B34A90D9")),
                     lineWidth(8f),
                     lineCap("round"),
                     lineJoin("round")
