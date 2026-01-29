@@ -1,12 +1,14 @@
 package com.graphhopper.navigationplugin
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
-import androidx.activity.result.ActivityResult
+import android.content.IntentFilter
+import android.os.Build
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
-import com.getcapacitor.annotation.ActivityCallback
 import com.getcapacitor.annotation.CapacitorPlugin
 
 @CapacitorPlugin(name = "MapLibreNavigation")
@@ -15,6 +17,31 @@ class MapLibreNavigationPlugin : Plugin() {
         const val EXTRA_NAVIGATE_URL = "navigate_url"
         const val EXTRA_REQUEST_BODY = "request_body"
         const val ACTION_STOP_NAVIGATION = "com.graphhopper.navigationplugin.STOP_NAVIGATION"
+        const val ACTION_NAVIGATION_CLOSED = "com.graphhopper.navigationplugin.NAVIGATION_CLOSED"
+    }
+
+    private val navigationClosedReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            notifyListeners("navigationClosed", JSObject())
+        }
+    }
+
+    override fun load() {
+        super.load()
+        val filter = IntentFilter(ACTION_NAVIGATION_CLOSED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(navigationClosedReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            context.registerReceiver(navigationClosedReceiver, filter)
+        }
+    }
+
+    override fun handleOnDestroy() {
+        super.handleOnDestroy()
+        try {
+            context.unregisterReceiver(navigationClosedReceiver)
+        } catch (_: Exception) {
+        }
     }
 
     @PluginMethod
@@ -26,12 +53,7 @@ class MapLibreNavigationPlugin : Plugin() {
             putExtra(EXTRA_NAVIGATE_URL, navigateUrl)
             putExtra(EXTRA_REQUEST_BODY, requestBody)
         }
-        startActivityForResult(call, intent, "navigationResult")
-    }
-
-    @ActivityCallback
-    private fun navigationResult(call: PluginCall, result: ActivityResult) {
-        notifyListeners("navigationClosed", JSObject())
+        context.startActivity(intent)
         call.resolve()
     }
 

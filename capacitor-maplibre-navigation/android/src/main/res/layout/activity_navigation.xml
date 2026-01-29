@@ -73,6 +73,20 @@
 
     </LinearLayout>
 
+    <!-- Re-center button (shown when user pans the map) -->
+    <ImageButton
+        android:id="@+id/recenterButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="200dp"
+        android:src="@drawable/ic_my_location"
+        android:background="@drawable/bg_card"
+        android:elevation="4dp"
+        android:visibility="gone"
+        android:contentDescription="Re-center map" />
+
     <!-- Bottom Bar: Info panel (margins set by setupWindowInsets) -->
     <LinearLayout
         android:id="@+id/bottomBar"

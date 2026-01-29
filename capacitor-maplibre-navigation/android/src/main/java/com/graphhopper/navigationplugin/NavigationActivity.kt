@@ -30,6 +30,7 @@ import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.location.LocationComponentActivationOptions
+import org.maplibre.android.location.OnCameraTrackingChangedListener
 import org.maplibre.android.location.modes.CameraMode
 import org.maplibre.android.location.modes.RenderMode
 import org.maplibre.android.maps.MapView
@@ -102,6 +103,7 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private lateinit var currentSpeedText: TextView
     private lateinit var speedLimitText: TextView
     private lateinit var stopButton: ImageButton
+    private lateinit var recenterButton: ImageButton
 
     // Rerouting
     private var navigateUrl: String? = null
@@ -163,6 +165,7 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync { map ->
             mapLibreMap = map
+            map.uiSettings.isCompassEnabled = false
             map.setStyle(Style.Builder().fromUri(DEFAULT_STYLE_URL)) { style ->
                 checkLocationPermissionAndStart(navigateUrl, requestBody, style)
             }
@@ -180,6 +183,7 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         currentSpeedText = findViewById(R.id.currentSpeedText)
         speedLimitText = findViewById(R.id.speedLimitText)
         stopButton = findViewById(R.id.stopButton)
+        recenterButton = findViewById(R.id.recenterButton)
     }
 
     private fun setupClickListeners() {
@@ -190,6 +194,10 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         stopButton.setOnClickListener {
             finish()
+        }
+
+        recenterButton.setOnClickListener {
+            recenterCamera()
         }
     }
 
@@ -405,6 +413,31 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             isLocationComponentEnabled = true
             cameraMode = CameraMode.TRACKING_GPS
             renderMode = RenderMode.GPS
+
+            addOnCameraTrackingChangedListener(object : OnCameraTrackingChangedListener {
+                override fun onCameraTrackingChanged(currentMode: Int) {
+                    if (currentMode == CameraMode.NONE) {
+                        recenterButton.visibility = View.VISIBLE
+                    } else {
+                        recenterButton.visibility = View.GONE
+                    }
+                }
+                override fun onCameraTrackingDismissed() {
+                    recenterButton.visibility = View.VISIBLE
+                }
+            })
+        }
+    }
+
+    private fun recenterCamera() {
+        cameraTrackingStarted = false
+        recenterButton.visibility = View.GONE
+        mapLibreMap?.locationComponent?.apply {
+            cameraMode = CameraMode.TRACKING_GPS
+            val topPadding = mapView.height * 0.25
+            paddingWhileTracking(doubleArrayOf(0.0, topPadding, 0.0, 0.0))
+            zoomWhileTracking(17.0)
+            tiltWhileTracking(45.0)
         }
     }
 
@@ -474,8 +507,15 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             distanceToNextManeuver = currentStepProgress.distanceRemaining
             distanceToTurnText.text = formatDistance(distanceToNextManeuver)
 
-            // Voice instruction — use the translated maneuver text from the response
-            val voiceText = upcomingManeuver?.instruction ?: instruction
+            // Voice instruction — use the translated maneuver text from the response.
+            // If the upcoming step is short (< 150m), merge with the follow-on instruction
+            // so the user hears both turns in one sentence.
+            var voiceText = upcomingManeuver?.instruction ?: instruction
+            val upcomingStepDistance = currentLegProgress?.upComingStep?.distance ?: Double.MAX_VALUE
+            val followOnInstruction = currentLegProgress?.followOnStep?.maneuver?.instruction
+            if (upcomingStepDistance < 150 && followOnInstruction != null) {
+                voiceText = "$voiceText, then $followOnInstruction"
+            }
             val stepIndex = currentLegProgress?.stepIndex ?: -1
             handleVoiceInstruction(voiceText, distanceToNextManeuver, stepIndex)
         }
@@ -703,6 +743,8 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             unregisterReceiver(broadcastReceiver)
         } catch (_: Exception) {
         }
+        // Notify the plugin that navigation has closed (survives Activity recreation)
+        sendBroadcast(Intent(MapLibreNavigationPlugin.ACTION_NAVIGATION_CLOSED))
         navigation?.stopNavigation()
         navigation?.onDestroy()
         tts?.shutdown()
