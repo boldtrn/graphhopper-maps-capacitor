@@ -22,7 +22,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import org.maplibre.android.MapLibre
-import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.geometry.LatLngBounds
@@ -442,9 +441,8 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             distanceToNextManeuver = currentStepProgress.distanceRemaining
             distanceToTurnText.text = formatDistance(distanceToNextManeuver)
 
-            // Voice instruction with turn direction included
-            val voiceText = upcomingManeuver?.instruction
-                ?: "${getDirectionText(type, modifier)} ${instruction}".trim()
+            // Voice instruction — use the translated maneuver text from the response
+            val voiceText = upcomingManeuver?.instruction ?: instruction
             val stepIndex = currentLegProgress?.stepIndex ?: -1
             handleVoiceInstruction(voiceText, distanceToNextManeuver, stepIndex)
         }
@@ -471,15 +469,22 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         updateCameraPosition(location)
     }
 
-    private fun updateCameraPosition(location: Location) {
-        val cameraPosition = CameraPosition.Builder()
-            .target(LatLng(location.latitude, location.longitude))
-            .bearing(location.bearing.toDouble())
-            .zoom(17.0)
-            .tilt(45.0)
-            .build()
+    private var cameraTrackingStarted = false
 
-        mapLibreMap?.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 500)
+    private fun updateCameraPosition(location: Location) {
+        mapLibreMap?.locationComponent?.apply {
+            if (!cameraTrackingStarted) {
+                cameraTrackingStarted = true
+                // Re-enable tracking — fitCameraToRoute's animateCamera switches
+                // the camera mode to NONE, so we must restore it here.
+                cameraMode = CameraMode.TRACKING_GPS
+                // Shift the focal point down so the arrow sits in the lower third
+                val topPadding = mapView.height * 0.25
+                paddingWhileTracking(doubleArrayOf(0.0, topPadding, 0.0, 0.0))
+            }
+            zoomWhileTracking(17.0)
+            tiltWhileTracking(45.0)
+        }
     }
 
     private fun getManeuverIcon(type: StepManeuver.Type?, modifier: ManeuverModifier.Type?): Int {
@@ -498,24 +503,6 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             modifier == ManeuverModifier.Type.UTURN -> R.drawable.ic_turn_sharp_left
             modifier == ManeuverModifier.Type.STRAIGHT -> R.drawable.ic_straight
             else -> R.drawable.ic_straight
-        }
-    }
-
-    private fun getDirectionText(type: StepManeuver.Type?, modifier: ManeuverModifier.Type?): String {
-        return when {
-            type == StepManeuver.Type.ARRIVE -> "Arrive at destination"
-            type == StepManeuver.Type.DEPART -> "Depart"
-            type == StepManeuver.Type.ROUNDABOUT || type == StepManeuver.Type.ROTARY ||
-                type == StepManeuver.Type.ROUNDABOUT_TURN -> "Enter roundabout"
-            modifier == ManeuverModifier.Type.SHARP_LEFT -> "Turn sharp left"
-            modifier == ManeuverModifier.Type.SHARP_RIGHT -> "Turn sharp right"
-            modifier == ManeuverModifier.Type.SLIGHT_LEFT -> "Turn slight left"
-            modifier == ManeuverModifier.Type.SLIGHT_RIGHT -> "Turn slight right"
-            modifier == ManeuverModifier.Type.LEFT -> "Turn left"
-            modifier == ManeuverModifier.Type.RIGHT -> "Turn right"
-            modifier == ManeuverModifier.Type.UTURN -> "Make a U-turn"
-            modifier == ManeuverModifier.Type.STRAIGHT -> "Continue straight"
-            else -> "Continue"
         }
     }
 
