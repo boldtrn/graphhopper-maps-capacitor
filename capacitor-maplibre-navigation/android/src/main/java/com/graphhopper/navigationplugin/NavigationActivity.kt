@@ -13,6 +13,8 @@ import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
+import android.view.View
+import android.view.ViewGroup
 import android.view.WindowInsetsController
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -20,7 +22,9 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
@@ -130,6 +134,7 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
             )
         }
+        setupWindowInsets()
 
         // Initialize TTS
         tts = TextToSpeech(this, this)
@@ -185,6 +190,34 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         stopButton.setOnClickListener {
             finish()
+        }
+    }
+
+    private fun setupWindowInsets() {
+        val topBar = findViewById<View>(R.id.topBar)
+        val bottomBar = findViewById<View>(R.id.bottomBar)
+        val baseMargin = (16 * resources.displayMetrics.density).toInt()
+
+        ViewCompat.setOnApplyWindowInsetsListener(topBar) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            (v.layoutParams as ViewGroup.MarginLayoutParams).apply {
+                topMargin = insets.top + baseMargin
+                leftMargin = insets.left + baseMargin
+                rightMargin = insets.right + baseMargin
+            }
+            v.requestLayout()
+            windowInsets
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(bottomBar) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            (v.layoutParams as ViewGroup.MarginLayoutParams).apply {
+                bottomMargin = insets.bottom + baseMargin
+                leftMargin = insets.left + baseMargin
+                rightMargin = insets.right + baseMargin
+            }
+            v.requestLayout()
+            windowInsets
         }
     }
 

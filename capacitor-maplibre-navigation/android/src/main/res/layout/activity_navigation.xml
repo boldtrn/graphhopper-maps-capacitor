@@ -11,12 +11,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- Top Bar: Turn instruction -->
+    <!-- Top Bar: Turn instruction (margins set by setupWindowInsets) -->
     <LinearLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
         android:orientation="horizontal"
         android:padding="12dp"
         android:gravity="center_vertical"
@@ -74,13 +73,12 @@
 
     </LinearLayout>
 
-    <!-- Bottom Bar: Info panel -->
+    <!-- Bottom Bar: Info panel (margins set by setupWindowInsets) -->
     <LinearLayout
         android:id="@+id/bottomBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:layout_margin="16dp"
         android:orientation="horizontal"
         android:padding="12dp"
         android:gravity="center_vertical"
