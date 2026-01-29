@@ -5,17 +5,6 @@ ext {
     androidxEspressoCoreVersion = project.hasProperty('androidxEspressoCoreVersion') ? rootProject.ext.androidxEspressoCoreVersion : '3.7.0'
 }
 
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.7.3'
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22'
-    }
-}
-
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
@@ -51,11 +40,19 @@ repositories {
 }
 
 dependencies {
+    // Capacitor
     implementation project(':capacitor-android')
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
 
-    // MapLibre GL Native
-    implementation 'org.maplibre.gl:android-sdk:11.8.6'
+    // MapLibre GL Native (exclude old geojson/turf, Navigation SDK provides newer versions)
+    implementation('org.maplibre.gl:android-sdk:12.3.0') {
+        exclude group: 'org.maplibre.gl', module: 'android-sdk-geojson'
+        exclude group: 'org.maplibre.gl', module: 'android-sdk-turf'
+    }
+
+    // Navigation SDK (KMP version) - provides geojson-jvm and turf-jvm 7.0.0-pre0
+    implementation 'org.maplibre.navigation:navigation-core:5.0.0-pre12'
+    implementation 'org.maplibre.navigation:navigation-ui-android:5.0.0-pre12'
 
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"

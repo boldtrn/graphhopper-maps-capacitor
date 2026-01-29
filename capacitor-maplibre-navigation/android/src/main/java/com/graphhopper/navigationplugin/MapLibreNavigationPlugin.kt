@@ -12,22 +12,19 @@ import com.getcapacitor.annotation.CapacitorPlugin
 @CapacitorPlugin(name = "MapLibreNavigation")
 class MapLibreNavigationPlugin : Plugin() {
     companion object {
-        const val EXTRA_COORDINATES = "coordinates"
-        const val EXTRA_BOUNDS = "bounds"
+        const val EXTRA_NAVIGATE_URL = "navigate_url"
+        const val EXTRA_REQUEST_BODY = "request_body"
+        const val ACTION_STOP_NAVIGATION = "com.graphhopper.navigationplugin.STOP_NAVIGATION"
     }
 
     @PluginMethod
     fun startNavigation(call: PluginCall) {
-        val coordinatesArray = call.getArray("coordinates") ?: return call.reject("coordinates is required")
-        val boundsArray = call.getArray("bounds") ?: return call.reject("bounds is required")
-
-        val sw = boundsArray.getJSONArray(0)
-        val ne = boundsArray.getJSONArray(1)
-        val boundsString = "${sw.getDouble(0)},${sw.getDouble(1)},${ne.getDouble(0)},${ne.getDouble(1)}"
+        val navigateUrl = call.getString("navigateUrl") ?: return call.reject("navigateUrl is required")
+        val requestBody = call.getString("requestBody") ?: return call.reject("requestBody is required")
 
         val intent = Intent(context, NavigationActivity::class.java).apply {
-            putExtra(EXTRA_COORDINATES, coordinatesArray.toString())
-            putExtra(EXTRA_BOUNDS, boundsString)
+            putExtra(EXTRA_NAVIGATE_URL, navigateUrl)
+            putExtra(EXTRA_REQUEST_BODY, requestBody)
         }
         startActivityForResult(call, intent, "navigationResult")
     }
@@ -40,7 +37,7 @@ class MapLibreNavigationPlugin : Plugin() {
 
     @PluginMethod
     fun stopNavigation(call: PluginCall) {
-        context.sendBroadcast(Intent(NavigationActivity.ACTION_STOP_NAVIGATION))
+        context.sendBroadcast(Intent(ACTION_STOP_NAVIGATION))
         call.resolve()
     }
 }

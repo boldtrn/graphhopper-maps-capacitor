@@ -84,15 +84,22 @@ if (Capacitor.isNativePlatform()) {
     });
 
     window.ghNativeNavigation = {
-        start(path, onClose) {
-            const coordinates = path.points.coordinates.map(c => [c[0], c[1]]);
-            const bbox = path.bbox;
-            const bounds = [[bbox[0], bbox[1]], [bbox[2], bbox[3]]];
-
-            console.info('GH Maps Navigation', 'Starting with', coordinates.length, 'points');
+        async start(path, navigateUrl, profile, onClose) {
             onCloseCallback = onClose;
 
-            MapLibreNavigation.startNavigation({ coordinates, bounds })
+            const coords = path.points.coordinates;
+            const destination = coords[coords.length - 1];
+
+            console.info('GH Maps Navigation', 'Starting navigation to', destination);
+
+            const requestBody = JSON.stringify({
+                type: 'mapbox',
+                profile: profile,
+                locale: navigator.language.split('-')[0],
+                points: [coords[0], destination]
+            });
+
+            MapLibreNavigation.startNavigation({ navigateUrl, requestBody })
                 .catch((error) => console.error('GH Maps Navigation', 'Failed to start:', error));
         },
         stop() {

@@ -2,14 +2,13 @@ import type { PluginListenerHandle } from '@capacitor/core';
 
 export interface StartNavigationOptions {
   /**
-   * Route coordinates as array of [lng, lat] pairs
+   * URL for the GraphHopper /navigate endpoint (including API key)
    */
-  coordinates: [number, number][];
-
+  navigateUrl: string;
   /**
-   * Route bounding box [[sw_lng, sw_lat], [ne_lng, ne_lat]]
+   * JSON request body for POST /navigate
    */
-  bounds: [[number, number], [number, number]];
+  requestBody: string;
 }
 
 export interface MapLibreNavigationPlugin {
