@@ -49,11 +49,12 @@ class MapLibreNavigationPlugin : Plugin() {
         val navigateUrl = call.getString("navigateUrl") ?: return call.reject("navigateUrl is required")
         val requestBody = call.getString("requestBody") ?: return call.reject("requestBody is required")
 
-        val intent = Intent(context, NavigationActivity::class.java).apply {
+        val intent = Intent(activity, NavigationActivity::class.java).apply {
             putExtra(EXTRA_NAVIGATE_URL, navigateUrl)
             putExtra(EXTRA_REQUEST_BODY, requestBody)
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        context.startActivity(intent)
+        activity.startActivity(intent)
         call.resolve()
     }
 

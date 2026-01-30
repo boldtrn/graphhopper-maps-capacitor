@@ -14,9 +14,9 @@
         android:strokeWidth="2"
         android:strokeColor="#000000"
         android:strokeLineCap="round" />
-    <!-- Exit line going up (straight) -->
+    <!-- Exit line going right -->
     <path
-        android:pathData="M12,5 V1"
+        android:pathData="M17,10 H23"
         android:strokeWidth="2"
         android:strokeColor="#000000"
         android:strokeLineCap="round" />

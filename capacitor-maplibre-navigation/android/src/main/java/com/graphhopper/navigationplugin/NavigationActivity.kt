@@ -566,7 +566,11 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             type == StepManeuver.Type.DEPART -> R.drawable.ic_straight
             type == StepManeuver.Type.ROUNDABOUT || type == StepManeuver.Type.ROTARY ||
                 type == StepManeuver.Type.ROUNDABOUT_TURN || type == StepManeuver.Type.EXIT_ROUNDABOUT ||
-                type == StepManeuver.Type.EXIT_ROTARY -> R.drawable.ic_roundabout
+                type == StepManeuver.Type.EXIT_ROTARY -> when (modifier) {
+                    ManeuverModifier.Type.LEFT, ManeuverModifier.Type.SHARP_LEFT, ManeuverModifier.Type.SLIGHT_LEFT -> R.drawable.ic_roundabout_left
+                    ManeuverModifier.Type.RIGHT, ManeuverModifier.Type.SHARP_RIGHT, ManeuverModifier.Type.SLIGHT_RIGHT -> R.drawable.ic_roundabout_right
+                    else -> R.drawable.ic_roundabout
+                }
             modifier == ManeuverModifier.Type.SHARP_LEFT -> R.drawable.ic_turn_sharp_left
             modifier == ManeuverModifier.Type.SHARP_RIGHT -> R.drawable.ic_turn_sharp_right
             modifier == ManeuverModifier.Type.SLIGHT_LEFT -> R.drawable.ic_turn_slight_left
