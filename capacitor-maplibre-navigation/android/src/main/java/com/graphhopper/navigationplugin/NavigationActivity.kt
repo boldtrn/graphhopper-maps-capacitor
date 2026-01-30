@@ -15,6 +15,7 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsetsController
+import android.view.WindowManager
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
@@ -124,6 +125,8 @@ class NavigationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         MapLibre.getInstance(this)
+
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         setContentView(R.layout.activity_navigation)
         bindViews()
@@ -647,6 +650,7 @@ class NavigationActivity : AppCompatActivity() {
 
     private fun formatDistance(meters: Double): String {
         return when {
+            meters >= 5000 -> String.format(Locale.getDefault(), "%.0f km", meters / 1000)
             meters >= 1000 -> String.format(Locale.getDefault(), "%.1f km", meters / 1000)
             else -> String.format(Locale.getDefault(), "%d m", meters.roundToInt())
         }
