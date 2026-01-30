@@ -44,7 +44,7 @@
                 android:id="@+id/distanceToTurnText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="20sp"
+                android:textSize="24sp"
                 android:textColor="#000000"
                 android:textStyle="bold"
                 tools:text="250 m" />
@@ -54,7 +54,7 @@
                 android:id="@+id/instructionText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
+                android:textSize="16sp"
                 android:textColor="#444444"
                 android:maxLines="2"
                 android:ellipsize="end"
@@ -87,181 +87,105 @@
         android:visibility="gone"
         android:contentDescription="Re-center map" />
 
-    <!-- Bottom Bar: Info panel (margins set by setupWindowInsets) -->
+    <!-- Bottom container: speed panel + info bar -->
     <LinearLayout
-        android:id="@+id/bottomBar"
+        android:id="@+id/bottomContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:gravity="center_vertical"
-        android:background="@drawable/bg_card"
+        android:orientation="vertical"
         android:elevation="4dp">
 
-        <!-- Info columns -->
+        <!-- Speed panel (small, left-aligned, above info bar) -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:id="@+id/speedPanel"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:layout_marginStart="16dp"
+            android:layout_marginBottom="8dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical|end"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp"
+            android:background="@drawable/bg_card">
 
-            <!-- Row 1: ETA, Remaining Time, Remaining Distance -->
-            <LinearLayout
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/currentSpeedText"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:textSize="28sp"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                tools:text="45" />
 
-                <!-- ETA -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="ETA"
-                        android:textSize="12sp"
-                        android:textColor="#666666" />
-
-                    <TextView
-                        android:id="@+id/etaText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="16sp"
-                        android:textColor="#000000"
-                        android:textStyle="bold"
-                        tools:text="14:35" />
-                </LinearLayout>
-
-                <!-- Remaining Time -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Time"
-                        android:textSize="12sp"
-                        android:textColor="#666666" />
-
-                    <TextView
-                        android:id="@+id/remainingTimeText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="16sp"
-                        android:textColor="#000000"
-                        android:textStyle="bold"
-                        tools:text="12 min" />
-                </LinearLayout>
-
-                <!-- Remaining Distance -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Distance"
-                        android:textSize="12sp"
-                        android:textColor="#666666" />
-
-                    <TextView
-                        android:id="@+id/remainingDistanceText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="16sp"
-                        android:textColor="#000000"
-                        android:textStyle="bold"
-                        tools:text="5.2 km" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- Row 2: Speed, Speed Limit -->
-            <LinearLayout
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/speedUnitText"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="horizontal">
+                android:layout_marginStart="4dp"
+                android:textSize="14sp"
+                android:textColor="#666666"
+                android:text="km/h" />
 
-                <!-- Current Speed -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Speed"
-                        android:textSize="12sp"
-                        android:textColor="#666666" />
-
-                    <TextView
-                        android:id="@+id/currentSpeedText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="16sp"
-                        android:textColor="#000000"
-                        android:textStyle="bold"
-                        tools:text="45 km/h" />
-                </LinearLayout>
-
-                <!-- Speed Limit -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Limit"
-                        android:textSize="12sp"
-                        android:textColor="#666666" />
-
-                    <TextView
-                        android:id="@+id/speedLimitText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="16sp"
-                        android:textColor="#000000"
-                        android:textStyle="bold"
-                        tools:text="50 km/h" />
-                </LinearLayout>
-
-                <!-- Empty space to balance with row 1 -->
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1" />
-            </LinearLayout>
         </LinearLayout>
 
-        <!-- Stop Button -->
-        <ImageButton
-            android:id="@+id/stopButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:src="@drawable/ic_close"
-            android:background="@drawable/bg_stop_button"
-            android:contentDescription="Stop navigation" />
+        <!-- Bottom Bar: ETA, time, distance + stop button -->
+        <LinearLayout
+            android:id="@+id/bottomBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_bottom_bar">
+
+            <!-- ETA -->
+            <TextView
+                android:id="@+id/etaText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:textSize="22sp"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                tools:text="14:35" />
+
+            <!-- Remaining Time -->
+            <TextView
+                android:id="@+id/remainingTimeText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:textSize="22sp"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                tools:text="12 min" />
+
+            <!-- Remaining Distance -->
+            <TextView
+                android:id="@+id/remainingDistanceText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:textSize="22sp"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                tools:text="5.2 km" />
+
+            <!-- Stop Button -->
+            <ImageButton
+                android:id="@+id/stopButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/ic_close"
+                android:background="@drawable/bg_stop_button"
+                android:contentDescription="Stop navigation" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

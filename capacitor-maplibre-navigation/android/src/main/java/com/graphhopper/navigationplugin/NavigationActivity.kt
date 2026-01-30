@@ -11,7 +11,6 @@ import android.graphics.Color
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
-import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -52,10 +51,16 @@ import org.maplibre.navigation.core.location.toAndroidLocation
 import org.maplibre.navigation.core.models.DirectionsResponse
 import org.maplibre.navigation.core.models.DirectionsRoute
 import org.maplibre.navigation.core.models.ManeuverModifier
+import org.maplibre.navigation.core.models.RouteOptions
 import org.maplibre.navigation.core.models.StepManeuver
 import org.maplibre.navigation.core.navigation.AndroidMapLibreNavigation
 import org.maplibre.navigation.core.navigation.MapLibreNavigationOptions
+import org.maplibre.navigation.core.milestone.VoiceInstructionMilestone
 import org.maplibre.navigation.core.routeprogress.RouteProgress
+import org.maplibre.navigation.android.navigation.ui.v5.voice.NavigationSpeechPlayer
+import org.maplibre.navigation.android.navigation.ui.v5.voice.SpeechAnnouncement
+import org.maplibre.navigation.android.navigation.ui.v5.voice.SpeechPlayer
+import org.maplibre.navigation.android.navigation.ui.v5.voice.SpeechPlayerProvider
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.OutputStreamWriter
@@ -66,7 +71,7 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.roundToInt
 
-class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
+class NavigationActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "NavigationActivity"
         private const val ROUTE_SOURCE_ID = "route-source"
@@ -86,11 +91,8 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var lastKnownLocation: Location? = null
 
     // Voice
-    private var tts: TextToSpeech? = null
-    private var isTtsReady = false
+    private var speechPlayer: SpeechPlayer? = null
     private var isMuted = false
-    private var lastAnnouncedStepIndex: Int = -1
-    private var announcedThresholds: MutableSet<Int> = mutableSetOf()
 
     // UI components
     private lateinit var turnIcon: ImageView
@@ -101,7 +103,6 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private lateinit var remainingTimeText: TextView
     private lateinit var remainingDistanceText: TextView
     private lateinit var currentSpeedText: TextView
-    private lateinit var speedLimitText: TextView
     private lateinit var stopButton: ImageButton
     private lateinit var recenterButton: ImageButton
 
@@ -137,9 +138,6 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             )
         }
         setupWindowInsets()
-
-        // Initialize TTS
-        tts = TextToSpeech(this, this)
 
         // Register broadcast receiver
         val filter = IntentFilter().apply {
@@ -181,7 +179,6 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         remainingTimeText = findViewById(R.id.remainingTimeText)
         remainingDistanceText = findViewById(R.id.remainingDistanceText)
         currentSpeedText = findViewById(R.id.currentSpeedText)
-        speedLimitText = findViewById(R.id.speedLimitText)
         stopButton = findViewById(R.id.stopButton)
         recenterButton = findViewById(R.id.recenterButton)
     }
@@ -189,6 +186,7 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private fun setupClickListeners() {
         muteButton.setOnClickListener {
             isMuted = !isMuted
+            speechPlayer?.setMuted(isMuted)
             updateMuteButtonIcon()
         }
 
@@ -219,12 +217,8 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         ViewCompat.setOnApplyWindowInsetsListener(bottomBar) { v, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            (v.layoutParams as ViewGroup.MarginLayoutParams).apply {
-                bottomMargin = insets.bottom + baseMargin
-                leftMargin = insets.left + baseMargin
-                rightMargin = insets.right + baseMargin
-            }
-            v.requestLayout()
+            val dp16 = (16 * resources.displayMetrics.density).toInt()
+            v.setPadding(insets.left + dp16, dp16, insets.right + dp16, insets.bottom + dp16)
             windowInsets
         }
     }
@@ -317,20 +311,42 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         try {
             val directionsResponse = DirectionsResponse.fromJson(routeJson)
             val routes = directionsResponse.routes
+
             if (routes.isEmpty()) {
                 Log.e(TAG, "No routes in response")
                 finish()
                 return
             }
-            currentRoute = routes.first()
+            currentRoute = directionsResponse.routes.first().copy(
+                routeOptions = RouteOptions(
+                    // These dummy route options are not not used to create directions,
+                    // but currently they are necessary to start the navigation
+                    // and to use the banner & voice instructions.
+                    // Again, this isn't ideal, but it is a requirement of the framework.
+                    baseUrl = "https://graphhopper.com",
+                    profile = "graphhopper",
+                    user = "graphhopper",
+                    accessToken = "graphhopper",
+                    voiceInstructions = true,
+                    bannerInstructions = true,
+                    language = "en-US",
+                    coordinates = listOf(Point(9.6935451, 52.3758408), Point(9.9769191, 53.5426183)),
+                    requestUuid = "0000-0000-0000-0000"
+                )
+            )
 
             // Initialize replay location engine
             val locationEngine = ReplayRouteLocationEngine()
             locationEngine?.assign(currentRoute!!)
 
-            // Initialize navigation
+            // Initialize speech player using route's voice language or device locale
+            val voiceLanguage = currentRoute?.voiceLanguage ?: Locale.getDefault().language
+            speechPlayer = NavigationSpeechPlayer(SpeechPlayerProvider(this, voiceLanguage, true))
+            speechPlayer?.setMuted(isMuted)
+
+            // Initialize navigation with default milestones enabled (for voice instructions)
             val options = MapLibreNavigationOptions(
-                defaultMilestonesEnabled = false
+                defaultMilestonesEnabled = true
             )
             navigation = AndroidMapLibreNavigation(
                 context = applicationContext,
@@ -347,6 +363,14 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
                     // Update location puck
                     mapLibreMap?.locationComponent?.forceLocationUpdate(androidLocation)
+                }
+            }
+
+            // Voice instructions via SDK milestones
+            navigation?.addMilestoneEventListener { routeProgress, instruction, milestone ->
+                if (milestone is VoiceInstructionMilestone) {
+                    val speechAnnouncement = SpeechAnnouncement.builder().voiceInstructionMilestone(milestone).build()
+                    speechPlayer?.play(speechAnnouncement)
                 }
             }
 
@@ -386,9 +410,6 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
             // Start navigation
             navigation?.startNavigation(currentRoute!!)
-
-            // Speak starting instruction
-            speakInstruction("Starting navigation")
 
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize navigation: ${e.message}", e)
@@ -501,23 +522,14 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             // Update turn icon based on upcoming maneuver
             val type = bannerInstruction?.primary?.type ?: upcomingManeuver?.type
             val modifier = bannerInstruction?.primary?.modifier ?: upcomingManeuver?.modifier
-            turnIcon.setImageResource(getManeuverIcon(type, modifier))
+            turnIcon.setImageResource(getManeuverIcon(
+                type, modifier,
+                upcomingManeuver?.bearingBefore, upcomingManeuver?.bearingAfter
+            ))
 
             // Distance to next maneuver (= remaining distance in current step)
             distanceToNextManeuver = currentStepProgress.distanceRemaining
             distanceToTurnText.text = formatDistance(distanceToNextManeuver)
-
-            // Voice instruction — use the translated maneuver text from the response.
-            // If the upcoming step is short (< 150m), merge with the follow-on instruction
-            // so the user hears both turns in one sentence.
-            var voiceText = upcomingManeuver?.instruction ?: instruction
-            val upcomingStepDistance = currentLegProgress?.upComingStep?.distance ?: Double.MAX_VALUE
-            val followOnInstruction = currentLegProgress?.followOnStep?.maneuver?.instruction
-            if (upcomingStepDistance < 150 && followOnInstruction != null) {
-                voiceText = "$voiceText, then $followOnInstruction"
-            }
-            val stepIndex = currentLegProgress?.stepIndex ?: -1
-            handleVoiceInstruction(voiceText, distanceToNextManeuver, stepIndex)
         }
 
         // Update remaining distance and time
@@ -531,12 +543,9 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         val etaMillis = System.currentTimeMillis() + (durationRemaining * 1000).toLong()
         etaText.text = formatTime(etaMillis)
 
-        // Update current speed
-        val speedMps = location.speed
-        currentSpeedText.text = formatSpeed(speedMps)
-
-        // Speed limit not available
-        speedLimitText.text = "--"
+        // Update current speed (number only, unit is in the layout)
+        val speedKmh = (location.speed * 3.6f).roundToInt()
+        currentSpeedText.text = speedKmh.toString()
 
         // Update camera to follow location
         updateCameraPosition(location)
@@ -560,16 +569,30 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
     }
 
-    private fun getManeuverIcon(type: StepManeuver.Type?, modifier: ManeuverModifier.Type?): Int {
+    private fun getManeuverIcon(
+        type: StepManeuver.Type?,
+        modifier: ManeuverModifier.Type?,
+        bearingBefore: Double? = null,
+        bearingAfter: Double? = null
+    ): Int {
         return when {
             type == StepManeuver.Type.ARRIVE -> R.drawable.ic_destination
             type == StepManeuver.Type.DEPART -> R.drawable.ic_straight
             type == StepManeuver.Type.ROUNDABOUT || type == StepManeuver.Type.ROTARY ||
                 type == StepManeuver.Type.ROUNDABOUT_TURN || type == StepManeuver.Type.EXIT_ROUNDABOUT ||
-                type == StepManeuver.Type.EXIT_ROTARY -> when (modifier) {
-                    ManeuverModifier.Type.LEFT, ManeuverModifier.Type.SHARP_LEFT, ManeuverModifier.Type.SLIGHT_LEFT -> R.drawable.ic_roundabout_left
-                    ManeuverModifier.Type.RIGHT, ManeuverModifier.Type.SHARP_RIGHT, ManeuverModifier.Type.SLIGHT_RIGHT -> R.drawable.ic_roundabout_right
-                    else -> R.drawable.ic_roundabout
+                type == StepManeuver.Type.EXIT_ROTARY -> {
+                    // Use bearing difference to determine exit direction
+                    if (bearingBefore != null && bearingAfter != null) {
+                        // Normalize turn angle to -180..180; positive = right, negative = left
+                        val turnAngle = ((bearingAfter - bearingBefore + 540) % 360) - 180
+                        when {
+                            turnAngle > 30 -> R.drawable.ic_roundabout_right
+                            turnAngle < -30 -> R.drawable.ic_roundabout_left
+                            else -> R.drawable.ic_roundabout
+                        }
+                    } else {
+                        R.drawable.ic_roundabout
+                    }
                 }
             modifier == ManeuverModifier.Type.SHARP_LEFT -> R.drawable.ic_turn_sharp_left
             modifier == ManeuverModifier.Type.SHARP_RIGHT -> R.drawable.ic_turn_sharp_right
@@ -580,62 +603,6 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             modifier == ManeuverModifier.Type.UTURN -> R.drawable.ic_turn_sharp_left
             modifier == ManeuverModifier.Type.STRAIGHT -> R.drawable.ic_straight
             else -> R.drawable.ic_straight
-        }
-    }
-
-    private val voiceThresholds = listOf(1000, 200, 30)
-
-    private fun handleVoiceInstruction(instruction: String, distanceToManeuver: Double, stepIndex: Int) {
-        if (isMuted) return
-
-        // On step change, pre-mark thresholds above the entry distance as already
-        // announced so a GPS jump or fast speed into a step never triggers a
-        // threshold the user has already passed.
-        if (stepIndex != lastAnnouncedStepIndex) {
-            lastAnnouncedStepIndex = stepIndex
-            announcedThresholds.clear()
-            for (t in voiceThresholds) {
-                if (t > distanceToManeuver) {
-                    announcedThresholds.add(t)
-                }
-            }
-        }
-
-        // Determine which threshold we are within
-        val threshold = voiceThresholds.lastOrNull { distanceToManeuver <= it } ?: return
-
-        // Only announce each threshold once per step
-        if (threshold in announcedThresholds) return
-        announcedThresholds.add(threshold)
-
-        val spokenText = when (threshold) {
-            30 -> instruction
-            200 -> "In 200 meters, $instruction"
-            1000 -> "In 1 kilometer, $instruction"
-            else -> return
-        }
-
-        speakInstruction(spokenText)
-    }
-
-    private fun speakInstruction(text: String) {
-        if (isTtsReady && !isMuted) {
-            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "nav_instruction")
-        }
-    }
-
-    override fun onInit(status: Int) {
-        if (status == TextToSpeech.SUCCESS) {
-            val result = tts?.setLanguage(Locale.getDefault())
-            isTtsReady = result != TextToSpeech.LANG_MISSING_DATA &&
-                    result != TextToSpeech.LANG_NOT_SUPPORTED
-            if (!isTtsReady) {
-                Log.w(TAG, "TTS language not supported, trying English")
-                tts?.setLanguage(Locale.US)
-                isTtsReady = true
-            }
-        } else {
-            Log.e(TAG, "TTS initialization failed")
         }
     }
 
@@ -673,10 +640,6 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 drawRoute(style, newRoute)
             }
 
-            lastAnnouncedStepIndex = -1
-            announcedThresholds.clear()
-            speakInstruction("Route updated")
-
         } catch (e: Exception) {
             Log.e(TAG, "Failed to apply reroute: ${e.message}", e)
         }
@@ -704,11 +667,6 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private fun formatTime(millis: Long): String {
         val formatter = SimpleDateFormat("HH:mm", Locale.getDefault())
         return formatter.format(Date(millis))
-    }
-
-    private fun formatSpeed(mps: Float): String {
-        val kmh = mps * 3.6f
-        return String.format(Locale.getDefault(), "%d km/h", kmh.roundToInt())
     }
 
     override fun onStart() {
@@ -751,7 +709,7 @@ class NavigationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         sendBroadcast(Intent(MapLibreNavigationPlugin.ACTION_NAVIGATION_CLOSED))
         navigation?.stopNavigation()
         navigation?.onDestroy()
-        tts?.shutdown()
+        speechPlayer?.onDestroy()
         mapView.onDestroy()
     }
 }
