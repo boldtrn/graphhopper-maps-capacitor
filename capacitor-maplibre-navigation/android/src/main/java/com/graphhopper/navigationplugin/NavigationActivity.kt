@@ -241,8 +241,6 @@ class NavigationActivity : AppCompatActivity() {
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 LOCATION_PERMISSION_REQUEST
             )
-            intent.putExtra("pending_navigate_url", navigateUrl)
-            intent.putExtra("pending_request_body", requestBody)
         } else {
             fetchAndInitializeNavigation(navigateUrl, requestBody, style)
         }
@@ -256,8 +254,8 @@ class NavigationActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == LOCATION_PERMISSION_REQUEST) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                val navigateUrl = intent.getStringExtra("pending_navigate_url")
-                val requestBody = intent.getStringExtra("pending_request_body")
+                val navigateUrl = intent.getStringExtra(MapLibreNavigationPlugin.EXTRA_NAVIGATE_URL)
+                val requestBody = intent.getStringExtra(MapLibreNavigationPlugin.EXTRA_REQUEST_BODY)
                 if (navigateUrl != null && requestBody != null) {
                     mapLibreMap?.style?.let { style ->
                         fetchAndInitializeNavigation(navigateUrl, requestBody, style)
@@ -525,6 +523,7 @@ class NavigationActivity : AppCompatActivity() {
             // Update turn icon based on upcoming maneuver
             val type = bannerInstruction?.primary?.type ?: upcomingManeuver?.type
             val modifier = bannerInstruction?.primary?.modifier ?: upcomingManeuver?.modifier
+            Log.e(TAG, "$instruction, bearing before: ${upcomingManeuver?.bearingBefore}, after: ${upcomingManeuver?.bearingAfter}")
             turnIcon.setImageResource(getManeuverIcon(
                 type, modifier,
                 upcomingManeuver?.bearingBefore, upcomingManeuver?.bearingAfter
@@ -612,12 +611,10 @@ class NavigationActivity : AppCompatActivity() {
     private fun fetchAndReroute(navigateUrl: String, requestBody: String) {
         Thread {
             val routeJson = fetchNavigateRoute(navigateUrl, requestBody)
-            runOnUiThread {
-                if (routeJson != null) {
-                    applyReroute(routeJson)
-                } else {
-                    Log.e(TAG, "Failed to fetch reroute from $navigateUrl")
-                }
+            if (routeJson != null) {
+                runOnUiThread { applyReroute(routeJson) }
+            } else {
+                Log.e(TAG, "Failed to fetch reroute from $navigateUrl")
             }
         }.start()
     }
@@ -633,9 +630,6 @@ class NavigationActivity : AppCompatActivity() {
 
             val newRoute = routes.first()
             currentRoute = newRoute
-
-            // rerouting should not update route for replay location engine
-            // locationEngine?.assign(newRoute)
 
             navigation?.startNavigation(newRoute)
 
