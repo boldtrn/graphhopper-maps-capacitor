@@ -595,7 +595,7 @@ class NavigationActivity : AppCompatActivity() {
 
     private fun formatDistance(meters: Double): String {
         return when {
-            meters >= 5000 -> String.format(Locale.getDefault(), "%.0f km", meters / 1000)
+            meters >= 10000 -> String.format(Locale.getDefault(), "%.0f km", meters / 1000)
             meters >= 1000 -> String.format(Locale.getDefault(), "%.1f km", meters / 1000)
             else -> String.format(Locale.getDefault(), "%d m", meters.roundToInt())
         }
