@@ -304,21 +304,7 @@ class NavigationActivity : AppCompatActivity() {
                 return
             }
             currentRoute = directionsResponse.routes.first().copy(
-                routeOptions = RouteOptions(
-                    // These dummy route options are not not used to create directions,
-                    // but currently they are necessary to start the navigation
-                    // and to use the banner & voice instructions.
-                    // Again, this isn't ideal, but it is a requirement of the framework.
-                    baseUrl = "https://graphhopper.com",
-                    profile = "graphhopper",
-                    user = "graphhopper",
-                    accessToken = "graphhopper",
-                    voiceInstructions = true,
-                    bannerInstructions = true,
-                    language = "en-US",
-                    coordinates = listOf(Point(9.6935451, 52.3758408), Point(9.9769191, 53.5426183)),
-                    requestUuid = "0000-0000-0000-0000"
-                )
+                routeOptions = createWtfObject()
             )
 
             // Initialize location engine based on fakeGps setting
@@ -335,7 +321,13 @@ class NavigationActivity : AppCompatActivity() {
 
             // Initialize navigation with default milestones enabled (for voice instructions)
             val options = MapLibreNavigationOptions(
-                defaultMilestonesEnabled = true
+                defaultMilestonesEnabled = true,
+                // offRouteThresholdRadiusMeters = 50.0,
+
+                snapToRoute = false
+                // snapping works in general but has sometimes strange back-and-forth behavour
+                // TODO why would we need to set useDefaultLocationEngine=false?
+                // https://github.com/maplibre/maplibre-navigation-android/blob/534334f768ca14fbe9ac50d8d29859ec1c54b4de/app/src/main/java/org/maplibre/navigation/android/example/SnapToRouteNavigationActivity.kt#L154
             )
             navigation = AndroidMapLibreNavigation(
                 context = applicationContext,
@@ -403,6 +395,24 @@ class NavigationActivity : AppCompatActivity() {
         }
     }
 
+    private fun createWtfObject(): RouteOptions {
+        return RouteOptions(
+            // These dummy route options are not not used to create directions,
+            // but currently they are necessary to start the navigation
+            // and to use the banner & voice instructions.
+            // Again, this isn't ideal, but it is a requirement of the framework.
+            baseUrl = "https://graphhopper.com",
+            profile = "graphhopper",
+            user = "graphhopper",
+            accessToken = "graphhopper",
+            voiceInstructions = true,
+            bannerInstructions = true,
+            language = "en-US",
+            coordinates = listOf(Point(9.6935451, 52.3758408), Point(9.9769191, 53.5426183)),
+            requestUuid = "0000-0000-0000-0000"
+        )
+    }
+
     @SuppressLint("MissingPermission")
     private fun setupLocationComponent(style: Style) {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -453,18 +463,23 @@ class NavigationActivity : AppCompatActivity() {
         val geometry = route.geometry ?: return
         val lineString = LineString(geometry, Constants.PRECISION_6)
 
-        // Add source and layer
+        // Add source and layer (below location puck)
         style.addSource(GeoJsonSource(ROUTE_SOURCE_ID, lineString.toJvm()))
-        style.addLayer(
-            LineLayer(ROUTE_LAYER_ID, ROUTE_SOURCE_ID).apply {
-                setProperties(
-                    lineColor(Color.parseColor("#B34A90D9")),
-                    lineWidth(8f),
-                    lineCap("round"),
-                    lineJoin("round")
-                )
-            }
-        )
+        val routeLayer = LineLayer(ROUTE_LAYER_ID, ROUTE_SOURCE_ID).apply {
+            setProperties(
+                lineColor(Color.parseColor("#B34A90D9")),
+                lineWidth(8f),
+                lineCap("round"),
+                lineJoin("round")
+            )
+        }
+        // Add below location puck shadow layer (if it exists), otherwise on top
+        val shadowLayerId = "mapbox-location-shadow-layer"
+        if (style.getLayer(shadowLayerId) != null) {
+            style.addLayerBelow(routeLayer, shadowLayerId)
+        } else {
+            style.addLayer(routeLayer)
+        }
     }
 
     private fun updateNavigationUI(location: Location, routeProgress: RouteProgress) {
@@ -598,16 +613,20 @@ class NavigationActivity : AppCompatActivity() {
                 return
             }
 
-            val newRoute = routes.first()
+            speechPlayer?.onOffRoute();
+            // TODO announce re-routing?
+
+            val newRoute = routes.first().copy(
+                routeOptions = createWtfObject()
+            )
             currentRoute = newRoute
-
             navigation?.startNavigation(newRoute)
-
             mapLibreMap?.style?.let { style ->
                 drawRoute(style, newRoute)
             }
 
         } catch (e: Exception) {
+            // TODO announce that re-routing failed?
             Log.e(TAG, "Failed to apply reroute: ${e.message}", e)
         }
     }
