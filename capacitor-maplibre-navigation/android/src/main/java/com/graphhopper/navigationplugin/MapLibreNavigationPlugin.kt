@@ -49,6 +49,7 @@ class MapLibreNavigationPlugin : Plugin() {
         val navigateUrl = call.getString("navigateUrl") ?: return call.reject("navigateUrl is required")
         val requestBody = call.getString("requestBody") ?: return call.reject("requestBody is required")
 
+        // Save stuff into the intent to live after screen rotations. Later we could simplify this a bit with @Parcelize.
         val intent = Intent(activity, NavigationActivity::class.java).apply {
             putExtra(EXTRA_NAVIGATE_URL, navigateUrl)
             putExtra(EXTRA_REQUEST_BODY, requestBody)

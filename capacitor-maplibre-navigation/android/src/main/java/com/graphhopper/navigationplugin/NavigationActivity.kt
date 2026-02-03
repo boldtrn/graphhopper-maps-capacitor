@@ -44,6 +44,7 @@ import org.maplibre.geojson.common.toJvm
 import org.maplibre.geojson.model.LineString
 import org.maplibre.geojson.model.Point
 import org.maplibre.navigation.core.location.engine.LocationEngine
+import org.maplibre.navigation.core.location.engine.LocationEngineProvider
 import org.maplibre.navigation.core.location.replay.ReplayRouteLocationEngine
 import org.maplibre.navigation.core.utils.Constants
 import org.maplibre.navigation.core.location.toAndroidLocation
@@ -77,6 +78,9 @@ class NavigationActivity : AppCompatActivity() {
         private const val ROUTE_LAYER_ID = "route-layer"
         private const val DEFAULT_STYLE_URL = "https://tiles.mapilion.com/assets/osm-bright/style.json?key=b582abd4-d55d-4cb1-8f34-f4254cd52aa7"
         private const val LOCATION_PERMISSION_REQUEST = 1001
+
+        // Set to true to simulate GPS along the route instead of using real GPS
+        private const val FAKE_GPS = true
     }
 
     // Map components
@@ -84,7 +88,6 @@ class NavigationActivity : AppCompatActivity() {
     private var mapLibreMap: MapLibreMap? = null
 
     // Navigation components
-    private val locationEngine: LocationEngine? = null
     private var navigation: AndroidMapLibreNavigation? = null
     private var currentRoute: DirectionsRoute? = null
     private var lastKnownLocation: Location? = null
@@ -295,9 +298,12 @@ class NavigationActivity : AppCompatActivity() {
                 )
             )
 
-            // Initialize replay location engine
-            val locationEngine = ReplayRouteLocationEngine()
-            locationEngine?.assign(currentRoute!!)
+            // Initialize location engine based on fakeGps setting
+            val locationEngine: LocationEngine = if (FAKE_GPS) {
+                ReplayRouteLocationEngine().also { it.assign(currentRoute!!) }
+            } else {
+                LocationEngineProvider.getBestLocationEngine(applicationContext)
+            }
 
             // Initialize speech player using route's voice language or device locale
             val voiceLanguage = currentRoute?.voiceLanguage ?: Locale.getDefault().language
@@ -365,8 +371,8 @@ class NavigationActivity : AppCompatActivity() {
             // Setup location component for navigation puck
             setupLocationComponent(style)
 
-            // Fit camera to route (TODO: has no impact as navigation is started immediately afterwards)
-            // fitCameraToRoute(currentRoute!!)
+            // Fit camera to route
+            fitCameraToRoute(currentRoute!!)
 
             // Start navigation
             navigation?.startNavigation(currentRoute!!)
@@ -388,7 +394,7 @@ class NavigationActivity : AppCompatActivity() {
         mapLibreMap?.locationComponent?.apply {
             activateLocationComponent(
                 LocationComponentActivationOptions.builder(this@NavigationActivity, style)
-                    .useDefaultLocationEngine(false) // We'll push updates via forceLocationUpdate
+                    .useDefaultLocationEngine(!FAKE_GPS) // Use real GPS engine when not faking
                     .build()
             )
             isLocationComponentEnabled = true
@@ -453,9 +459,11 @@ class NavigationActivity : AppCompatActivity() {
             boundsBuilder.include(LatLng(point.latitude, point.longitude))
         }
 
-        mapLibreMap?.animateCamera(
-            CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100)
-        )
+        mapView.post {
+            mapLibreMap?.animateCamera(
+                CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 20)
+            )
+        }
     }
 
     private fun updateNavigationUI(location: Location, routeProgress: RouteProgress) {
