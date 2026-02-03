@@ -24,9 +24,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import org.maplibre.android.MapLibre
+import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
-import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.location.LocationComponentActivationOptions
 import org.maplibre.android.location.OnCameraTrackingChangedListener
 import org.maplibre.android.location.modes.CameraMode
@@ -80,7 +80,7 @@ class NavigationActivity : AppCompatActivity() {
         private const val LOCATION_PERMISSION_REQUEST = 1001
 
         // Set to true to simulate GPS along the route instead of using real GPS
-        private const val FAKE_GPS = true
+        private const val FAKE_GPS = false
     }
 
     // Map components
@@ -183,11 +183,34 @@ class NavigationActivity : AppCompatActivity() {
             return
         }
 
+        // Parse start coordinates from request body for initial camera position
+        val startPosition = try {
+            val json = JSONObject(requestBody)
+            val points = json.getJSONArray("points")
+            val start = points.getJSONArray(0)
+            LatLng(start.getDouble(1), start.getDouble(0)) // lat, lng
+        } catch (e: Exception) {
+            null
+        }
+
         // Initialize map
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync { map ->
             mapLibreMap = map
-            map.uiSettings.isCompassEnabled = false
+            // Position compass below the top instruction panel
+            val density = resources.displayMetrics.density
+            map.uiSettings.setCompassMargins(0, (140 * density).toInt(), (16 * density).toInt(), 0)
+            // Use custom white compass image
+            ContextCompat.getDrawable(this, R.drawable.ic_compass)?.let {
+                map.uiSettings.setCompassImage(it)
+            }
+            // Set initial camera to start position
+            startPosition?.let {
+                map.cameraPosition = CameraPosition.Builder()
+                    .target(it)
+                    .zoom(15.0)
+                    .build()
+            }
             map.setStyle(Style.Builder().fromUri(DEFAULT_STYLE_URL)) { style ->
                 checkLocationPermissionAndStart(navigateUrl, requestBody, style)
             }
@@ -371,9 +394,6 @@ class NavigationActivity : AppCompatActivity() {
             // Setup location component for navigation puck
             setupLocationComponent(style)
 
-            // Fit camera to route
-            fitCameraToRoute(currentRoute!!)
-
             // Start navigation
             navigation?.startNavigation(currentRoute!!)
 
@@ -447,25 +467,6 @@ class NavigationActivity : AppCompatActivity() {
         )
     }
 
-    private fun fitCameraToRoute(route: DirectionsRoute) {
-        val geometry = route.geometry ?: return
-        val lineString = LineString(geometry, Constants.PRECISION_6)
-        val coordinates = lineString.coordinates
-
-        if (coordinates.isEmpty()) return
-
-        val boundsBuilder = LatLngBounds.Builder()
-        coordinates.forEach { point ->
-            boundsBuilder.include(LatLng(point.latitude, point.longitude))
-        }
-
-        mapView.post {
-            mapLibreMap?.animateCamera(
-                CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 20)
-            )
-        }
-    }
-
     private fun updateNavigationUI(location: Location, routeProgress: RouteProgress) {
         // Update current step info
         val currentLegProgress = routeProgress.currentLegProgress
@@ -530,9 +531,6 @@ class NavigationActivity : AppCompatActivity() {
         mapLibreMap?.locationComponent?.apply {
             if (!cameraTrackingStarted) {
                 cameraTrackingStarted = true
-                // Re-enable tracking — fitCameraToRoute's animateCamera switches
-                // the camera mode to NONE, so we must restore it here.
-                cameraMode = CameraMode.TRACKING_GPS
                 // Shift the focal point down so the arrow sits in the lower third
                 val topPadding = mapView.height * 0.25
                 paddingWhileTracking(doubleArrayOf(0.0, topPadding, 0.0, 0.0))
