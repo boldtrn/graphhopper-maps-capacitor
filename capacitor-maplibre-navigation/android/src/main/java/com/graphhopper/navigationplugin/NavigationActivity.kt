@@ -12,19 +12,17 @@ import android.location.Location
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.view.ViewGroup
 import android.view.WindowInsetsController
 import android.view.WindowManager
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.TextView
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
@@ -93,19 +91,17 @@ class NavigationActivity : AppCompatActivity() {
 
     // Voice
     private var speechPlayer: SpeechPlayer? = null
-    private var isMuted = false
 
-    // UI components
-    private lateinit var turnIcon: ImageView
-    private lateinit var distanceToTurnText: TextView
-    private lateinit var instructionText: TextView
-    private lateinit var muteButton: ImageButton
-    private lateinit var etaText: TextView
-    private lateinit var remainingTimeText: TextView
-    private lateinit var remainingDistanceText: TextView
-    private lateinit var currentSpeedText: TextView
-    private lateinit var stopButton: ImageButton
-    private lateinit var recenterButton: ImageButton
+    // Compose state — drives the overlay UI
+    private var turnIconRes by mutableIntStateOf(R.drawable.ic_straight)
+    private var distanceToTurn by mutableStateOf("")
+    private var instruction by mutableStateOf("")
+    private var isMuted by mutableStateOf(false)
+    private var eta by mutableStateOf("")
+    private var remainingTime by mutableStateOf("")
+    private var remainingDistance by mutableStateOf("")
+    private var currentSpeed by mutableStateOf("")
+    private var showRecenter by mutableStateOf(false)
 
     // Rerouting
     private var navigateUrl: String? = null
@@ -128,11 +124,31 @@ class NavigationActivity : AppCompatActivity() {
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        setContentView(R.layout.activity_navigation)
-        bindViews()
-        setupClickListeners()
+        // Create MapView before setContent so it can be embedded via AndroidView
+        mapView = MapView(this)
 
-        // Setup edge-to-edge display
+        setContent {
+            NavigationScreen(
+                mapView = mapView,
+                turnIconRes = turnIconRes,
+                distanceToTurn = distanceToTurn,
+                instruction = instruction,
+                isMuted = isMuted,
+                eta = eta,
+                remainingTime = remainingTime,
+                remainingDistance = remainingDistance,
+                currentSpeed = currentSpeed,
+                showRecenter = showRecenter,
+                onMuteToggle = {
+                    isMuted = !isMuted
+                    speechPlayer?.setMuted(isMuted)
+                },
+                onStop = { finish() },
+                onRecenter = { recenterCamera() },
+            )
+        }
+
+        // Setup edge-to-edge display (after setContent so DecorView exists)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.setSystemBarsAppearance(
@@ -140,7 +156,6 @@ class NavigationActivity : AppCompatActivity() {
                 WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
             )
         }
-        setupWindowInsets()
 
         // Register broadcast receiver
         val filter = IntentFilter().apply {
@@ -162,7 +177,6 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         // Initialize map
-        mapView = findViewById(R.id.mapView)
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync { map ->
             mapLibreMap = map
@@ -171,65 +185,6 @@ class NavigationActivity : AppCompatActivity() {
                 checkLocationPermissionAndStart(navigateUrl, requestBody, style)
             }
         }
-    }
-
-    private fun bindViews() {
-        turnIcon = findViewById(R.id.turnIcon)
-        distanceToTurnText = findViewById(R.id.distanceToTurnText)
-        instructionText = findViewById(R.id.instructionText)
-        muteButton = findViewById(R.id.muteButton)
-        etaText = findViewById(R.id.etaText)
-        remainingTimeText = findViewById(R.id.remainingTimeText)
-        remainingDistanceText = findViewById(R.id.remainingDistanceText)
-        currentSpeedText = findViewById(R.id.currentSpeedText)
-        stopButton = findViewById(R.id.stopButton)
-        recenterButton = findViewById(R.id.recenterButton)
-    }
-
-    private fun setupClickListeners() {
-        muteButton.setOnClickListener {
-            isMuted = !isMuted
-            speechPlayer?.setMuted(isMuted)
-            updateMuteButtonIcon()
-        }
-
-        stopButton.setOnClickListener {
-            finish()
-        }
-
-        recenterButton.setOnClickListener {
-            recenterCamera()
-        }
-    }
-
-    private fun setupWindowInsets() {
-        val topBar = findViewById<View>(R.id.topBar)
-        val bottomBar = findViewById<View>(R.id.bottomBar)
-        val baseMargin = (16 * resources.displayMetrics.density).toInt()
-
-        ViewCompat.setOnApplyWindowInsetsListener(topBar) { v, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            (v.layoutParams as ViewGroup.MarginLayoutParams).apply {
-                topMargin = insets.top + baseMargin
-                leftMargin = insets.left + baseMargin
-                rightMargin = insets.right + baseMargin
-            }
-            v.requestLayout()
-            windowInsets
-        }
-
-        ViewCompat.setOnApplyWindowInsetsListener(bottomBar) { v, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val dp16 = (16 * resources.displayMetrics.density).toInt()
-            v.setPadding(insets.left + dp16, dp16, insets.right + dp16, insets.bottom + dp16)
-            windowInsets
-        }
-    }
-
-    private fun updateMuteButtonIcon() {
-        muteButton.setImageResource(
-            if (isMuted) R.drawable.ic_volume_off else R.drawable.ic_volume_up
-        )
     }
 
     private fun checkLocationPermissionAndStart(navigateUrl: String, requestBody: String, style: Style) {
@@ -438,14 +393,10 @@ class NavigationActivity : AppCompatActivity() {
 
             addOnCameraTrackingChangedListener(object : OnCameraTrackingChangedListener {
                 override fun onCameraTrackingChanged(currentMode: Int) {
-                    if (currentMode == CameraMode.NONE) {
-                        recenterButton.visibility = View.VISIBLE
-                    } else {
-                        recenterButton.visibility = View.GONE
-                    }
+                    showRecenter = currentMode == CameraMode.NONE
                 }
                 override fun onCameraTrackingDismissed() {
-                    recenterButton.visibility = View.VISIBLE
+                    showRecenter = true
                 }
             })
         }
@@ -453,7 +404,7 @@ class NavigationActivity : AppCompatActivity() {
 
     private fun recenterCamera() {
         cameraTrackingStarted = false
-        recenterButton.visibility = View.GONE
+        showRecenter = false
         mapLibreMap?.locationComponent?.apply {
             cameraMode = CameraMode.TRACKING_GPS
             val topPadding = mapView.height * 0.25
@@ -515,39 +466,39 @@ class NavigationActivity : AppCompatActivity() {
 
         currentStep?.let { step ->
             val bannerInstruction = step.bannerInstructions?.firstOrNull()
-            val instruction = bannerInstruction?.primary?.text
+            val instructionStr = bannerInstruction?.primary?.text
                 ?: upcomingManeuver?.instruction
                 ?: currentLegProgress?.upComingStep?.name ?: ""
-            instructionText.text = instruction
+            instruction = instructionStr
 
             // Update turn icon based on upcoming maneuver
             val type = bannerInstruction?.primary?.type ?: upcomingManeuver?.type
             val modifier = bannerInstruction?.primary?.modifier ?: upcomingManeuver?.modifier
-            Log.e(TAG, "$instruction, bearing before: ${upcomingManeuver?.bearingBefore}, after: ${upcomingManeuver?.bearingAfter}")
-            turnIcon.setImageResource(getManeuverIcon(
+            Log.e(TAG, "$instructionStr, bearing before: ${upcomingManeuver?.bearingBefore}, after: ${upcomingManeuver?.bearingAfter}")
+            turnIconRes = getManeuverIcon(
                 type, modifier,
                 upcomingManeuver?.bearingBefore, upcomingManeuver?.bearingAfter
-            ))
+            )
 
             // Distance to next maneuver (= remaining distance in current step)
             distanceToNextManeuver = currentStepProgress.distanceRemaining
-            distanceToTurnText.text = formatDistance(distanceToNextManeuver)
+            distanceToTurn = formatDistance(distanceToNextManeuver)
         }
 
         // Update remaining distance and time
-        val distanceRemaining = routeProgress.distanceRemaining
+        val distanceRemainingVal = routeProgress.distanceRemaining
         val durationRemaining = routeProgress.durationRemaining
 
-        remainingDistanceText.text = formatDistance(distanceRemaining)
-        remainingTimeText.text = formatDuration(durationRemaining)
+        remainingDistance = formatDistance(distanceRemainingVal)
+        remainingTime = formatDuration(durationRemaining)
 
         // Calculate and display ETA
         val etaMillis = System.currentTimeMillis() + (durationRemaining * 1000).toLong()
-        etaText.text = formatTime(etaMillis)
+        eta = formatTime(etaMillis)
 
-        // Update current speed (number only, unit is in the layout)
+        // Update current speed (number only, unit is in the composable)
         val speedKmh = (location.speed * 3.6f).roundToInt()
-        currentSpeedText.text = speedKmh.toString()
+        currentSpeed = speedKmh.toString()
 
         // Update camera to follow location
         updateCameraPosition(location)
