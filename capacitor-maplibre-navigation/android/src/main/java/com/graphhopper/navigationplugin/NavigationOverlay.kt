@@ -11,10 +11,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
@@ -67,7 +71,9 @@ fun NavigationScreen(
         // Top: instruction bar + optional "then" panel
         Column(
             modifier = Modifier
-                .align(Alignment.TopCenter)
+                .align(Alignment.TopStart)
+                .widthIn(max = 420.dp)
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
                 .windowInsetsPadding(WindowInsets.statusBars)
                 .padding(16.dp)
         ) {
@@ -88,21 +94,22 @@ fun NavigationScreen(
 
         // Bottom area: speed panel + info bar
         Column(
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .widthIn(max = 420.dp)
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
         ) {
-            // Speed panel + recenter button on the same row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+            // Speed panel + recenter button stacked vertically
+            Column(
+                modifier = Modifier.padding(16.dp),
             ) {
-                SpeedPanel(currentSpeed = currentSpeed)
-
                 if (showRecenter) {
                     RecenterButton(onClick = onRecenter)
                 }
+                SpeedPanel(
+                    currentSpeed = currentSpeed,
+                    modifier = if (showRecenter) Modifier.padding(top = 8.dp) else Modifier,
+                )
             }
 
             // Bottom info bar (full width, with system bar insets)
@@ -287,8 +294,8 @@ private fun BottomInfoBar(
             .fillMaxWidth()
             .shadow(4.dp, RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
             .background(Color.White, RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(16.dp)
+            .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
+            .padding(12.dp)
     ) {
         // Left side: remaining time + distance
         Column {
