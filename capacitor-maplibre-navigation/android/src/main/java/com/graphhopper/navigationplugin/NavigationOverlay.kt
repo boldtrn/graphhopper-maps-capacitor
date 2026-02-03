@@ -22,7 +22,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
@@ -48,6 +50,7 @@ fun NavigationScreen(
     remainingDistance: String,
     currentSpeed: String,
     showRecenter: Boolean,
+    thenTurnIconRes: Int?,
     onMuteToggle: () -> Unit,
     onStop: () -> Unit,
     onRecenter: () -> Unit,
@@ -59,18 +62,26 @@ fun NavigationScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Top instruction bar
-        TopInstructionBar(
-            turnIconRes = turnIconRes,
-            distanceToTurn = distanceToTurn,
-            instruction = instruction,
-            isMuted = isMuted,
-            onMuteToggle = onMuteToggle,
+        // Top: instruction bar + optional "then" panel
+        Column(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .windowInsetsPadding(WindowInsets.statusBars)
                 .padding(16.dp)
-        )
+        ) {
+            TopInstructionBar(
+                turnIconRes = turnIconRes,
+                distanceToTurn = distanceToTurn,
+                instruction = instruction,
+                isMuted = isMuted,
+                onMuteToggle = onMuteToggle,
+                showThen = thenTurnIconRes != null,
+            )
+
+            if (thenTurnIconRes != null) {
+                ThenPanel(thenTurnIconRes = thenTurnIconRes)
+            }
+        }
 
         // Bottom area: speed panel + info bar
         Column(
@@ -109,14 +120,20 @@ private fun TopInstructionBar(
     instruction: String,
     isMuted: Boolean,
     onMuteToggle: () -> Unit,
+    showThen: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
+    val shape = if (showThen) {
+        RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp, bottomEnd = 12.dp, bottomStart = 0.dp)
+    } else {
+        RoundedCornerShape(12.dp)
+    }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
-            .shadow(4.dp, RoundedCornerShape(12.dp))
-            .background(Color.White, RoundedCornerShape(12.dp))
+            .shadow(4.dp, shape)
+            .background(Color.White, shape)
             .padding(12.dp)
     ) {
         // Turn icon
@@ -313,5 +330,42 @@ private fun BottomInfoBar(
                 modifier = Modifier.size(24.dp)
             )
         }
+    }
+}
+
+@Composable
+private fun ThenPanel(
+    thenTurnIconRes: Int,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomEnd = 12.dp, bottomStart = 12.dp)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .background(Color.White, shape)
+            .drawBehind {
+                drawLine(
+                    color = Color(0xFFDDDDDD),
+                    start = Offset(0f, 0f),
+                    end = Offset(size.width, 0f),
+                    strokeWidth = 1f
+                )
+            }
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+    ) {
+        BasicText(
+            text = "Then",
+            style = TextStyle(
+                fontSize = 14.sp,
+                color = Color(0xFF666666),
+            )
+        )
+        Image(
+            painter = painterResource(thenTurnIconRes),
+            contentDescription = "Then turn",
+            modifier = Modifier
+                .padding(start = 6.dp)
+                .size(28.dp)
+        )
     }
 }

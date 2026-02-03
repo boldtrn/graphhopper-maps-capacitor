@@ -102,6 +102,7 @@ class NavigationActivity : AppCompatActivity() {
     private var remainingDistance by mutableStateOf("")
     private var currentSpeed by mutableStateOf("")
     private var showRecenter by mutableStateOf(false)
+    private var thenTurnIconRes by mutableStateOf<Int?>(null)
 
     // Rerouting
     private var navigateUrl: String? = null
@@ -139,6 +140,7 @@ class NavigationActivity : AppCompatActivity() {
                 remainingDistance = remainingDistance,
                 currentSpeed = currentSpeed,
                 showRecenter = showRecenter,
+                thenTurnIconRes = thenTurnIconRes,
                 onMuteToggle = {
                     isMuted = !isMuted
                     speechPlayer?.setMuted(isMuted)
@@ -483,6 +485,14 @@ class NavigationActivity : AppCompatActivity() {
             // Distance to next maneuver (= remaining distance in current step)
             distanceToNextManeuver = currentStepProgress.distanceRemaining
             distanceToTurn = formatDistance(distanceToNextManeuver)
+
+            // "Then" turn — show when the next maneuver is close and there's a sub instruction
+            val sub = bannerInstruction?.sub
+            thenTurnIconRes = if (sub != null && distanceToNextManeuver < 200) {
+                getManeuverIcon(sub.type, sub.modifier)
+            } else {
+                null
+            }
         }
 
         // Update remaining distance and time
