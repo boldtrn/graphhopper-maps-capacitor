@@ -75,7 +75,7 @@ class NavigationActivity : AppCompatActivity() {
         private const val TAG = "NavigationActivity"
         private const val ROUTE_SOURCE_ID = "route-source"
         private const val ROUTE_LAYER_ID = "route-layer"
-        private const val DEFAULT_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty"
+        private const val DEFAULT_STYLE_URL = "https://tiles.mapilion.com/assets/osm-bright/style.json?key=b582abd4-d55d-4cb1-8f34-f4254cd52aa7"
         private const val LOCATION_PERMISSION_REQUEST = 1001
     }
 
