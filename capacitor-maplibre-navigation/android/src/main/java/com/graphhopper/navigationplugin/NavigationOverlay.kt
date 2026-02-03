@@ -80,7 +80,7 @@ fun NavigationScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -275,7 +275,6 @@ private fun BottomInfoBar(
         }
 
         // ETA centered in remaining space
-        // icon (20dp) + gap (6dp) = 26dp on left, balanced by 26dp padding on right
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
@@ -291,9 +290,9 @@ private fun BottomInfoBar(
                 style = TextStyle(
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF666666),
+                    color = Color.Black,
                 ),
-                modifier = Modifier.padding(start = 6.dp, end = 26.dp)
+                modifier = Modifier.padding(start = 6.dp)
             )
         }
 
