@@ -16,6 +16,11 @@ jobs:
           cache-dependency-path: graphhopper-maps/package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Build capacitor-maplibre-navigation plugin                                                              
+        working-directory: ./capacitor-maplibre-navigation                                                            
+        run: |                                                                                                        
+          npm ci                                                                                                      
+          npm run build       
       - name: Build graphhopper-maps submodule
         working-directory: ./graphhopper-maps
         run: |
