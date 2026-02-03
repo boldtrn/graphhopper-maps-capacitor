@@ -362,11 +362,11 @@ class NavigationActivity : AppCompatActivity() {
             // Draw route on map first so the location puck renders on top
             drawRoute(style, currentRoute!!)
 
-            // Setup location component for navigation puck (after route layer)
+            // Setup location component for navigation puck
             setupLocationComponent(style)
 
-            // Fit camera to route
-            fitCameraToRoute(currentRoute!!)
+            // Fit camera to route (TODO: has no impact as navigation is started immediately afterwards)
+            // fitCameraToRoute(currentRoute!!)
 
             // Start navigation
             navigation?.startNavigation(currentRoute!!)
