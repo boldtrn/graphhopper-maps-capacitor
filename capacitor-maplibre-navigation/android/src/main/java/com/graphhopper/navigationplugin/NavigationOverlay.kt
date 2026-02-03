@@ -76,22 +76,20 @@ fun NavigationScreen(
         Column(
             modifier = Modifier.align(Alignment.BottomCenter)
         ) {
-            // Recenter button (above speed panel, right-aligned)
-            if (showRecenter) {
-                RecenterButton(
-                    onClick = onRecenter,
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(end = 16.dp, bottom = 8.dp)
-                )
-            }
-
-            // Speed panel (left-aligned)
-            SpeedPanel(
-                currentSpeed = currentSpeed,
+            // Speed panel + recenter button on the same row
+            Row(
                 modifier = Modifier
-                    .padding(start = 16.dp, bottom = 8.dp)
-            )
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                SpeedPanel(currentSpeed = currentSpeed)
+
+                if (showRecenter) {
+                    RecenterButton(onClick = onRecenter)
+                }
+            }
 
             // Bottom info bar (full width, with system bar insets)
             BottomInfoBar(
@@ -255,41 +253,49 @@ private fun BottomInfoBar(
             .windowInsetsPadding(WindowInsets.navigationBars)
             .padding(16.dp)
     ) {
-        // ETA
-        BasicText(
-            text = eta,
-            style = TextStyle(
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                textAlign = TextAlign.Center,
-            ),
-            modifier = Modifier.weight(1f)
-        )
+        // Left side: remaining time + distance
+        Column {
+            BasicText(
+                text = remainingTime,
+                style = TextStyle(
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                )
+            )
+            BasicText(
+                text = remainingDistance,
+                style = TextStyle(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color(0xFF666666),
+                ),
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
 
-        // Remaining time
-        BasicText(
-            text = remainingTime,
-            style = TextStyle(
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                textAlign = TextAlign.Center,
-            ),
+        // ETA centered in remaining space
+        // icon (20dp) + gap (6dp) = 26dp on left, balanced by 26dp padding on right
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
             modifier = Modifier.weight(1f)
-        )
-
-        // Remaining distance
-        BasicText(
-            text = remainingDistance,
-            style = TextStyle(
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                textAlign = TextAlign.Center,
-            ),
-            modifier = Modifier.weight(1f)
-        )
+        ) {
+            Image(
+                painter = painterResource(R.drawable.ic_clock),
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            BasicText(
+                text = eta,
+                style = TextStyle(
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF666666),
+                ),
+                modifier = Modifier.padding(start = 6.dp, end = 26.dp)
+            )
+        }
 
         // Stop button
         Box(
