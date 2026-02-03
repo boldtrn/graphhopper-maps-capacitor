@@ -103,6 +103,7 @@ class NavigationActivity : AppCompatActivity() {
     private var currentSpeed by mutableStateOf("")
     private var showRecenter by mutableStateOf(false)
     private var thenTurnIconRes by mutableStateOf<Int?>(null)
+    private var roundaboutExit by mutableStateOf<Int?>(null)
 
     // Rerouting
     private var navigateUrl: String? = null
@@ -141,6 +142,7 @@ class NavigationActivity : AppCompatActivity() {
                 currentSpeed = currentSpeed,
                 showRecenter = showRecenter,
                 thenTurnIconRes = thenTurnIconRes,
+                roundaboutExit = roundaboutExit,
                 onMuteToggle = {
                     isMuted = !isMuted
                     speechPlayer?.setMuted(isMuted)
@@ -476,11 +478,11 @@ class NavigationActivity : AppCompatActivity() {
             // Update turn icon based on upcoming maneuver
             val type = bannerInstruction?.primary?.type ?: upcomingManeuver?.type
             val modifier = bannerInstruction?.primary?.modifier ?: upcomingManeuver?.modifier
-            Log.e(TAG, "$instructionStr, bearing before: ${upcomingManeuver?.bearingBefore}, after: ${upcomingManeuver?.bearingAfter}")
-            turnIconRes = getManeuverIcon(
-                type, modifier,
-                upcomingManeuver?.bearingBefore, upcomingManeuver?.bearingAfter
-            )
+            val degrees = bannerInstruction?.primary?.degrees
+            turnIconRes = getManeuverIcon(type, modifier, degrees)
+
+            // Show exit number for roundabouts
+            roundaboutExit = if (isRoundaboutType(type)) upcomingManeuver?.exit else null
 
             // Distance to next maneuver (= remaining distance in current step)
             distanceToNextManeuver = currentStepProgress.distanceRemaining
@@ -489,7 +491,7 @@ class NavigationActivity : AppCompatActivity() {
             // "Then" turn — show when the next maneuver is close and there's a sub instruction
             val sub = bannerInstruction?.sub
             thenTurnIconRes = if (sub != null && distanceToNextManeuver < 200) {
-                getManeuverIcon(sub.type, sub.modifier)
+                getManeuverIcon(sub.type, sub.modifier, sub.degrees)
             } else {
                 null
             }
@@ -532,31 +534,32 @@ class NavigationActivity : AppCompatActivity() {
         }
     }
 
+    private fun isRoundaboutType(type: StepManeuver.Type?): Boolean {
+        return type == StepManeuver.Type.ROUNDABOUT || type == StepManeuver.Type.ROTARY ||
+            type == StepManeuver.Type.ROUNDABOUT_TURN || type == StepManeuver.Type.EXIT_ROUNDABOUT ||
+            type == StepManeuver.Type.EXIT_ROTARY
+    }
+
     private fun getManeuverIcon(
         type: StepManeuver.Type?,
         modifier: ManeuverModifier.Type?,
-        bearingBefore: Double? = null,
-        bearingAfter: Double? = null
+        degrees: Double? = null
     ): Int {
         return when {
             type == StepManeuver.Type.ARRIVE -> R.drawable.ic_destination
             type == StepManeuver.Type.DEPART -> R.drawable.ic_straight
-            type == StepManeuver.Type.ROUNDABOUT || type == StepManeuver.Type.ROTARY ||
-                type == StepManeuver.Type.ROUNDABOUT_TURN || type == StepManeuver.Type.EXIT_ROUNDABOUT ||
-                type == StepManeuver.Type.EXIT_ROTARY -> {
-                    // Use bearing difference to determine exit direction
-                    if (bearingBefore != null && bearingAfter != null) {
-                        // Normalize turn angle to -180..180; positive = right, negative = left
-                        val turnAngle = ((bearingAfter - bearingBefore + 540) % 360) - 180
-                        when {
-                            turnAngle > 30 -> R.drawable.ic_roundabout_right
-                            turnAngle < -30 -> R.drawable.ic_roundabout_left
-                            else -> R.drawable.ic_roundabout
-                        }
-                    } else {
-                        R.drawable.ic_roundabout
+            isRoundaboutType(type) -> {
+                // Use degrees (angle through roundabout) to determine exit direction
+                if (degrees != null) {
+                    when {
+                        degrees < 145 -> R.drawable.ic_roundabout_right
+                        degrees < 215 -> R.drawable.ic_roundabout_straight
+                        else -> R.drawable.ic_roundabout_left
                     }
+                } else {
+                    R.drawable.ic_roundabout
                 }
+            }
             modifier == ManeuverModifier.Type.SHARP_LEFT -> R.drawable.ic_turn_sharp_left
             modifier == ManeuverModifier.Type.SHARP_RIGHT -> R.drawable.ic_turn_sharp_right
             modifier == ManeuverModifier.Type.SLIGHT_LEFT -> R.drawable.ic_turn_slight_left

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
@@ -51,6 +52,7 @@ fun NavigationScreen(
     currentSpeed: String,
     showRecenter: Boolean,
     thenTurnIconRes: Int?,
+    roundaboutExit: Int?,
     onMuteToggle: () -> Unit,
     onStop: () -> Unit,
     onRecenter: () -> Unit,
@@ -76,6 +78,7 @@ fun NavigationScreen(
                 isMuted = isMuted,
                 onMuteToggle = onMuteToggle,
                 showThen = thenTurnIconRes != null,
+                roundaboutExit = roundaboutExit,
             )
 
             if (thenTurnIconRes != null) {
@@ -121,6 +124,7 @@ private fun TopInstructionBar(
     isMuted: Boolean,
     onMuteToggle: () -> Unit,
     showThen: Boolean = false,
+    roundaboutExit: Int? = null,
     modifier: Modifier = Modifier,
 ) {
     val shape = if (showThen) {
@@ -136,12 +140,28 @@ private fun TopInstructionBar(
             .background(Color.White, shape)
             .padding(12.dp)
     ) {
-        // Turn icon
-        Image(
-            painter = painterResource(turnIconRes),
-            contentDescription = "Turn direction",
+        // Turn icon with optional roundabout exit number overlay
+        Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier.size(48.dp)
-        )
+        ) {
+            Image(
+                painter = painterResource(turnIconRes),
+                contentDescription = "Turn direction",
+                modifier = Modifier.size(48.dp)
+            )
+            if (roundaboutExit != null) {
+                BasicText(
+                    text = roundaboutExit.toString(),
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                    ),
+                    modifier = Modifier.offset(y = (-4).dp),
+                )
+            }
+        }
 
         // Instruction text area
         Column(
