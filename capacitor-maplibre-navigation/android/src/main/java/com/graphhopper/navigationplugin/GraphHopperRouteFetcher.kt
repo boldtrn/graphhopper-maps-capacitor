@@ -35,20 +35,14 @@ class GraphHopperRouteFetcher(
         // Force empty snap_preventions to snap on everything, which is important for the current location
         requestJson.put("snap_preventions", JSONArray())
 
+        // important: do not forget "intersection" otherwise maplibre will throw an exception:
+        //        at org.maplibre.navigation.core.navigation.NavigationHelper.findCurrentIntersection(NavigationHelper.kt:378)
+        requestJson.put("details", JSONArray().put("max_speed").put("intersection").put("distance").put("time").put("average_speed"))
+
         // The navigate endpoint does not want some parameters:
         requestJson.remove("elevation")
         requestJson.remove("points_encoded")
         requestJson.remove("points_encoded_multiplier")
-
-        // with path details we trigger an exception in maplibre navigation:
-        //        IndexOutOfBoundsException: Index 0 out of bounds for length 0
-        //        at jdk.internal.util.Preconditions.outOfBounds(Preconditions.java:64)
-        //        at jdk.internal.util.Preconditions.outOfBoundsCheckIndex(Preconditions.java:70)
-        //        at jdk.internal.util.Preconditions.checkIndex(Preconditions.java:266)
-        //        at java.util.Objects.checkIndex(Objects.java:391)
-        //        at java.util.ArrayList.get(ArrayList.java:434)
-        //        at org.maplibre.navigation.core.navigation.NavigationHelper.findCurrentIntersection(NavigationHelper.kt:378)
-        requestJson.remove("details")
     }
 
     private var currentThread: Thread? = null

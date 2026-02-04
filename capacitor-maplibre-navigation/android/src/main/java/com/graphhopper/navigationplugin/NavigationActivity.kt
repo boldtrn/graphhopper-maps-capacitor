@@ -100,6 +100,8 @@ class NavigationActivity : AppCompatActivity() {
     private var remainingDistance by mutableStateOf("")
     private var currentSpeed by mutableStateOf("")
     private var speedUnit by mutableStateOf("km/h")
+    private var speedLimit by mutableStateOf<Int?>(null)  // null = not shown
+    private var speedLimitUnlimited by mutableStateOf(false)
     private var showRecenter by mutableStateOf(false)
     private var thenTurnIconRes by mutableStateOf<Int?>(null)
     private var roundaboutExit by mutableStateOf<Int?>(null)
@@ -144,6 +146,8 @@ class NavigationActivity : AppCompatActivity() {
                 remainingDistance = remainingDistance,
                 currentSpeed = currentSpeed,
                 speedUnit = speedUnit,
+                speedLimit = speedLimit,
+                speedLimitUnlimited = speedLimitUnlimited,
                 showRecenter = showRecenter,
                 thenTurnIconRes = thenTurnIconRes,
                 roundaboutExit = roundaboutExit,
@@ -304,7 +308,8 @@ class NavigationActivity : AppCompatActivity() {
                 finish()
                 return
             }
-            currentRoute = directionsResponse.routes.first().copy(
+            val route = directionsResponse.routes.first()
+            currentRoute = route.copy(
                 routeOptions = createWtfObject()
             )
 
@@ -529,6 +534,25 @@ class NavigationActivity : AppCompatActivity() {
         // Update current speed
         currentSpeed = Converters.formatSpeed(location.speed, showDistanceInMiles).toString()
         speedUnit = Converters.getSpeedUnit(showDistanceInMiles)
+
+        // Update speed limit from annotation
+        val maxSpeedAnnotation = routeProgress.currentLegProgress?.currentLegAnnotation?.maxSpeed
+        when {
+            maxSpeedAnnotation?.none == true -> {
+                speedLimit = null
+                speedLimitUnlimited = true
+            }
+            maxSpeedAnnotation?.unknown == true || maxSpeedAnnotation == null -> {
+                speedLimit = null
+                speedLimitUnlimited = false
+            }
+            else -> {
+                speedLimit = maxSpeedAnnotation.speed?.let { limit ->
+                    Converters.convertSpeedLimit(limit, maxSpeedAnnotation.unit, showDistanceInMiles)
+                }
+                speedLimitUnlimited = false
+            }
+        }
 
         // Update camera to follow location
         updateCameraPosition(location)

@@ -55,6 +55,8 @@ fun NavigationScreen(
     remainingDistance: String,
     currentSpeed: String,
     speedUnit: String,
+    speedLimit: Int?,
+    speedLimitUnlimited: Boolean,
     showRecenter: Boolean,
     thenTurnIconRes: Int?,
     roundaboutExit: Int?,
@@ -100,18 +102,27 @@ fun NavigationScreen(
                 .widthIn(max = 420.dp)
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
         ) {
-            // Speed panel + recenter button stacked vertically
+            // Speed panels + recenter button
             Column(
                 modifier = Modifier.padding(16.dp),
             ) {
                 if (showRecenter) {
                     RecenterButton(onClick = onRecenter)
                 }
-                SpeedPanel(
-                    currentSpeed = currentSpeed,
-                    speedUnit = speedUnit,
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = if (showRecenter) Modifier.padding(top = 8.dp) else Modifier,
-                )
+                ) {
+                    SpeedPanel(
+                        currentSpeed = currentSpeed,
+                        speedUnit = speedUnit,
+                    )
+                    if (speedLimit != null) {
+                        SpeedLimitPanel(speedLimit = speedLimit)
+                    } else if (speedLimitUnlimited) {
+                        SpeedLimitUnlimitedPanel()
+                    }
+                }
             }
 
             // Bottom info bar (full width, with system bar insets)
@@ -289,6 +300,62 @@ private fun SpeedPanel(
             }
         }
     }
+}
+
+@Composable
+private fun SpeedLimitPanel(
+    speedLimit: Int,
+    modifier: Modifier = Modifier,
+) {
+    // Speed limit sign - circular with red border (Vienna convention style)
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .shadow(4.dp, CircleShape)
+            .size(52.dp)
+            .background(Color.White, CircleShape)
+            .border(4.dp, Color.Red, CircleShape)
+    ) {
+        BasicText(
+            text = speedLimit.toString(),
+            style = TextStyle(
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                textAlign = TextAlign.Center,
+            )
+        )
+    }
+}
+
+@Composable
+private fun SpeedLimitUnlimitedPanel(
+    modifier: Modifier = Modifier,
+) {
+    // "End of speed limit" sign - white circle with diagonal grey stripes
+    Box(
+        modifier = modifier
+            .shadow(4.dp, CircleShape)
+            .size(52.dp)
+            .background(Color.White, CircleShape)
+            .border(2.dp, Color(0xFF333333), CircleShape)
+            .clip(CircleShape)
+            .drawBehind {
+                val stripeColor = Color(0xFF666666)
+                val stripeWidth = 2.dp.toPx()
+                val spacing = 4.dp.toPx()
+                // Draw 5 diagonal stripes through the center
+                for (i in -2..2) {
+                    val offset = i * spacing
+                    drawLine(
+                        color = stripeColor,
+                        start = Offset(size.width / 2 + offset - size.height / 2, size.height),
+                        end = Offset(size.width / 2 + offset + size.height / 2, 0f),
+                        strokeWidth = stripeWidth,
+                    )
+                }
+            }
+    )
 }
 
 @Composable

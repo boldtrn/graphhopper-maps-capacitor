@@ -1,5 +1,6 @@
 package com.graphhopper.navigationplugin
 
+import org.maplibre.navigation.core.models.SpeedLimit
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -67,5 +68,21 @@ object Converters {
      */
     fun getSpeedUnit(showDistanceInMiles: Boolean): String {
         return if (showDistanceInMiles) "mph" else "km/h"
+    }
+
+    /**
+     * Convert speed limit to the user's preferred unit.
+     * If the speed limit unit doesn't match the user's preference, convert it.
+     */
+    fun convertSpeedLimit(speed: Int, unit: SpeedLimit.Unit?, showDistanceInMiles: Boolean): Int {
+        val isSourceMph = unit == SpeedLimit.Unit.MPH
+        return when {
+            // Source is mph, user wants km/h -> convert mph to km/h
+            isSourceMph && !showDistanceInMiles -> (speed * 1.60934).roundToInt()
+            // Source is km/h, user wants mph -> convert km/h to mph
+            !isSourceMph && showDistanceInMiles -> (speed / 1.60934).roundToInt()
+            // No conversion needed
+            else -> speed
+        }
     }
 }
