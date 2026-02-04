@@ -54,6 +54,8 @@ import org.maplibre.navigation.core.models.ManeuverModifier
 import org.maplibre.navigation.core.models.RouteOptions
 import org.maplibre.navigation.core.models.StepManeuver
 import org.maplibre.navigation.core.navigation.AndroidMapLibreNavigation
+import org.maplibre.navigation.core.route.RouteListener
+import org.json.JSONObject
 import org.maplibre.navigation.core.navigation.MapLibreNavigationOptions
 import org.maplibre.navigation.core.milestone.VoiceInstructionMilestone
 import org.maplibre.navigation.core.routeprogress.RouteProgress
@@ -61,11 +63,6 @@ import org.maplibre.navigation.android.navigation.ui.v5.voice.NavigationSpeechPl
 import org.maplibre.navigation.android.navigation.ui.v5.voice.SpeechAnnouncement
 import org.maplibre.navigation.android.navigation.ui.v5.voice.SpeechPlayer
 import org.maplibre.navigation.android.navigation.ui.v5.voice.SpeechPlayerProvider
-import org.json.JSONArray
-import org.json.JSONObject
-import java.io.OutputStreamWriter
-import java.net.HttpURLConnection
-import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -80,6 +77,7 @@ class NavigationActivity : AppCompatActivity() {
         private const val LOCATION_PERMISSION_REQUEST = 1001
 
         // Set to true to simulate GPS along the route instead of using real GPS
+        // But for a better fake solution use Lockito or similar
         private const val FAKE_GPS = false
     }
 
@@ -108,9 +106,11 @@ class NavigationActivity : AppCompatActivity() {
     private var thenTurnIconRes by mutableStateOf<Int?>(null)
     private var roundaboutExit by mutableStateOf<Int?>(null)
 
-    // Rerouting
+    // Route fetching
     private var navigateUrl: String? = null
-    private var requestBody: String? = null
+    private var requestJson: JSONObject? = null
+    private var routeFetcher: GraphHopperRouteFetcher? = null
+    private var lastRouteProgress: RouteProgress? = null
 
     // Current step tracking
     private var distanceToNextManeuver = 0.0
@@ -175,21 +175,34 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         // Parse request from intent
-        val navigateUrl = intent.getStringExtra(MapLibreNavigationPlugin.EXTRA_NAVIGATE_URL)
+        val url = intent.getStringExtra(MapLibreNavigationPlugin.EXTRA_NAVIGATE_URL)
         val requestBody = intent.getStringExtra(MapLibreNavigationPlugin.EXTRA_REQUEST_BODY)
-        if (navigateUrl == null || requestBody == null) {
+        if (url == null || requestBody == null) {
             Log.e(TAG, "No navigate URL or request body provided")
             finish()
             return
         }
 
-        // Parse start coordinates from request body for initial camera position
+        // Parse JSON once with error handling
+        val json = try {
+            JSONObject(requestBody)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse request body: ${e.message}", e)
+            finish()
+            return
+        }
+
+        // Store for later use (after permission granted)
+        navigateUrl = url
+        requestJson = json
+
+        // Extract start coordinates for initial camera position
         val startPosition = try {
-            val json = JSONObject(requestBody)
             val points = json.getJSONArray("points")
             val start = points.getJSONArray(0)
             LatLng(start.getDouble(1), start.getDouble(0)) // lat, lng
         } catch (e: Exception) {
+            Log.w(TAG, "Could not extract start position: ${e.message}")
             null
         }
 
@@ -215,12 +228,12 @@ class NavigationActivity : AppCompatActivity() {
                     .build()
             }
             map.setStyle(Style.Builder().fromUri(DEFAULT_STYLE_URL)) { style ->
-                checkLocationPermissionAndStart(navigateUrl, requestBody, style)
+                checkLocationPermissionAndStart(style)
             }
         }
     }
 
-    private fun checkLocationPermissionAndStart(navigateUrl: String, requestBody: String, style: Style) {
+    private fun checkLocationPermissionAndStart(style: Style) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED
         ) {
@@ -230,7 +243,7 @@ class NavigationActivity : AppCompatActivity() {
                 LOCATION_PERMISSION_REQUEST
             )
         } else {
-            fetchAndInitializeNavigation(navigateUrl, requestBody, style)
+            fetchAndInitializeNavigation(style)
         }
     }
 
@@ -242,12 +255,8 @@ class NavigationActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == LOCATION_PERMISSION_REQUEST) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                val navigateUrl = intent.getStringExtra(MapLibreNavigationPlugin.EXTRA_NAVIGATE_URL)
-                val requestBody = intent.getStringExtra(MapLibreNavigationPlugin.EXTRA_REQUEST_BODY)
-                if (navigateUrl != null && requestBody != null) {
-                    mapLibreMap?.style?.let { style ->
-                        fetchAndInitializeNavigation(navigateUrl, requestBody, style)
-                    }
+                mapLibreMap?.style?.let { style ->
+                    fetchAndInitializeNavigation(style)
                 }
             } else {
                 Log.e(TAG, "Location permission denied")
@@ -256,93 +265,37 @@ class NavigationActivity : AppCompatActivity() {
         }
     }
 
-    private fun fetchAndInitializeNavigation(navigateUrl: String, requestBody: String, style: Style) {
-        this.navigateUrl = navigateUrl
-        this.requestBody = requestBody
-        val location = lastKnownLocation
-        Thread {
-            val routeJson = fetchNavigateRoute(navigateUrl, requestBody, location)
-            runOnUiThread {
-                if (routeJson != null) {
-                    initializeNavigation(routeJson, style)
-                } else {
-                    Log.e(TAG, "Failed to fetch route from $navigateUrl")
-                    finish()
+    private fun fetchAndInitializeNavigation(style: Style) {
+        val url = navigateUrl ?: return
+        val json = requestJson ?: return
+
+        // Create route fetcher once - uses pre-parsed JSON
+        routeFetcher = GraphHopperRouteFetcher(url, json).apply {
+            // RouteListener is used for reroutes (triggered by findRouteFromRouteProgress)
+            addRouteListener(object : RouteListener {
+                override fun onResponseReceived(response: DirectionsResponse, routeProgress: RouteProgress) {
+                    runOnUiThread { applyReroute(response) }
                 }
-            }
-        }.start()
-    }
-
-    private fun prepareNavigateRequestBody(requestBody: String, currentLocation: Location?): String {
-        val json = JSONObject(requestBody)
-
-        // Replace first point with current location if available
-        if (currentLocation != null) {
-            val points = json.getJSONArray("points")
-            val destination = points.getJSONArray(points.length() - 1)
-            val newPoints = JSONArray().apply {
-                put(JSONArray().apply {
-                    put(currentLocation.longitude)
-                    put(currentLocation.latitude)
-                })
-                put(destination)
-            }
-            json.put("points", newPoints)
-
-            if (currentLocation.hasBearing()) {
-                json.put("headings", JSONArray().put(currentLocation.bearing.toDouble()))
-            }
-        }
-
-        // Force a few request parameters for navigation
-        json.put("type", "mapbox")
-        json.put("ch.disable", true)
-        json.remove("elevation")
-        json.remove("points_encoded")
-        json.remove("points_encoded_multiplier")
-
-        // with path details we get:
-//        IndexOutOfBoundsException: Index 0 out of bounds for length 0
-//        at jdk.internal.util.Preconditions.outOfBounds(Preconditions.java:64)
-//        at jdk.internal.util.Preconditions.outOfBoundsCheckIndex(Preconditions.java:70)
-//        at jdk.internal.util.Preconditions.checkIndex(Preconditions.java:266)
-//        at java.util.Objects.checkIndex(Objects.java:391)
-//        at java.util.ArrayList.get(ArrayList.java:434)
-//        at org.maplibre.navigation.core.navigation.NavigationHelper.findCurrentIntersection(NavigationHelper.kt:378)
-        json.remove("details")
-        // json.put("details", JSONArray().put("max_speed"))
-        return json.toString()
-    }
-
-    private fun fetchNavigateRoute(navigateUrl: String, requestBody: String, currentLocation: Location?): String? {
-        val preparedBody = prepareNavigateRequestBody(requestBody, currentLocation)
-        return try {
-            val connection = URL(navigateUrl).openConnection() as HttpURLConnection
-            connection.requestMethod = "POST"
-            connection.setRequestProperty("Content-Type", "application/json")
-            connection.doOutput = true
-            connection.outputStream.use { os ->
-                OutputStreamWriter(os, Charsets.UTF_8).use { writer ->
-                    writer.write(preparedBody)
+                override fun onErrorReceived(throwable: Throwable) {
+                    Log.e(TAG, "Reroute failed: ${throwable.message}", throwable)
                 }
-            }
-            if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-                connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-            } else {
-                val errorBody = connection.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: ""
-                Log.e(TAG, "Navigate request failed: ${connection.responseCode} ${connection.responseMessage} - $errorBody")
-                null
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Navigate request error: ${e.message}", e)
-            null
+            })
+            // Fetch initial route using callbacks
+            fetchInitialRoute(
+                onSuccess = { response ->
+                    runOnUiThread { initializeNavigation(response, style) }
+                },
+                onError = { e ->
+                    Log.e(TAG, "Initial route fetch failed: ${e.message}", e)
+                    runOnUiThread { finish() }
+                }
+            )
         }
     }
 
     @SuppressLint("MissingPermission")
-    private fun initializeNavigation(routeJson: String, style: Style) {
+    private fun initializeNavigation(directionsResponse: DirectionsResponse, style: Style) {
         try {
-            val directionsResponse = DirectionsResponse.fromJson(routeJson)
             val routes = directionsResponse.routes
 
             if (routes.isEmpty()) {
@@ -384,6 +337,9 @@ class NavigationActivity : AppCompatActivity() {
 
             // Setup progress listener
             navigation?.addProgressChangeListener { location, routeProgress ->
+                // Track for off-route rerouting
+                lastRouteProgress = routeProgress
+
                 runOnUiThread {
                     val androidLocation = location.toAndroidLocation()
                     lastKnownLocation = androidLocation
@@ -402,13 +358,13 @@ class NavigationActivity : AppCompatActivity() {
                 }
             }
 
-            // Setup off-route listener — reroute natively
+            // Setup off-route listener
             navigation?.addOffRouteListener { location ->
-                Log.i(TAG, "Off route detected at ${location.latitude}, ${location.longitude}")
-                val url = navigateUrl
-                val body = requestBody
-                if (url != null && body != null) {
-                    fetchAndReroute(url, body, location.toAndroidLocation())
+                val progress = lastRouteProgress
+                Log.i(TAG, "Off route detected at ${location.latitude}, ${location.longitude}, leg ${progress?.legIndex}")
+                lastKnownLocation = location.toAndroidLocation()
+                if (progress != null) {
+                    routeFetcher?.findRouteFromRouteProgress(location, progress)
                 }
             }
 
@@ -630,28 +586,16 @@ class NavigationActivity : AppCompatActivity() {
         }
     }
 
-    private fun fetchAndReroute(navigateUrl: String, requestBody: String, currentLocation: Location) {
-        Thread {
-            val routeJson = fetchNavigateRoute(navigateUrl, requestBody, currentLocation)
-            if (routeJson != null) {
-                runOnUiThread { applyReroute(routeJson) }
-            } else {
-                Log.e(TAG, "Failed to fetch reroute from $navigateUrl")
-            }
-        }.start()
-    }
 
-    private fun applyReroute(routeJson: String) {
+    private fun applyReroute(directionsResponse: DirectionsResponse) {
         try {
-            val directionsResponse = DirectionsResponse.fromJson(routeJson)
             val routes = directionsResponse.routes
             if (routes.isEmpty()) {
                 Log.e(TAG, "No routes in reroute response")
                 return
             }
 
-            speechPlayer?.onOffRoute();
-            // TODO announce re-routing?
+            speechPlayer?.onOffRoute()
 
             val newRoute = routes.first().copy(
                 routeOptions = createWtfObject()
@@ -661,9 +605,7 @@ class NavigationActivity : AppCompatActivity() {
             mapLibreMap?.style?.let { style ->
                 drawRoute(style, newRoute)
             }
-
         } catch (e: Exception) {
-            // TODO announce that re-routing failed?
             Log.e(TAG, "Failed to apply reroute: ${e.message}", e)
         }
     }
