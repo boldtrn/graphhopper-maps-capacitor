@@ -204,6 +204,9 @@ class NavigationActivity : AppCompatActivity() {
             ContextCompat.getDrawable(this, R.drawable.ic_compass)?.let {
                 map.uiSettings.setCompassImage(it)
             }
+            // Hide attribution (covered by UI anyway)
+            map.uiSettings.isAttributionEnabled = false
+            map.uiSettings.isLogoEnabled = false
             // Set initial camera to start position
             startPosition?.let {
                 map.cameraPosition = CameraPosition.Builder()
