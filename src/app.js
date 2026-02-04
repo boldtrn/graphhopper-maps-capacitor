@@ -84,21 +84,9 @@ if (Capacitor.isNativePlatform()) {
     });
 
     window.ghNativeNavigation = {
-        async start(path, navigateUrl, profile, onClose) {
+        async start(navigateUrl, requestBody, onClose) {
             onCloseCallback = onClose;
-
-            const coords = path.points.coordinates;
-            const destination = coords[coords.length - 1];
-
-            console.info('GH Maps Navigation', 'Starting navigation to', destination);
-
-            const requestBody = JSON.stringify({
-                type: 'mapbox',
-                profile: profile,
-                locale: navigator.language.split('-')[0],
-                points: [coords[0], destination]
-            });
-
+            console.info('GH Maps Navigation', 'Starting navigation');
             MapLibreNavigation.startNavigation({ navigateUrl, requestBody })
                 .catch((error) => console.error('GH Maps Navigation', 'Failed to start:', error));
         },

@@ -269,7 +269,29 @@ class NavigationActivity : AppCompatActivity() {
         }.start()
     }
 
+    private fun prepareNavigateRequestBody(requestBody: String): String {
+        val json = JSONObject(requestBody)
+        // Force a few request parameters for navigation
+        json.put("type", "mapbox")
+        json.remove("elevation")
+        json.remove("points_encoded")
+        json.remove("points_encoded_multiplier")
+
+        // with path details we get:
+//        IndexOutOfBoundsException: Index 0 out of bounds for length 0
+//        at jdk.internal.util.Preconditions.outOfBounds(Preconditions.java:64)
+//        at jdk.internal.util.Preconditions.outOfBoundsCheckIndex(Preconditions.java:70)
+//        at jdk.internal.util.Preconditions.checkIndex(Preconditions.java:266)
+//        at java.util.Objects.checkIndex(Objects.java:391)
+//        at java.util.ArrayList.get(ArrayList.java:434)
+//        at org.maplibre.navigation.core.navigation.NavigationHelper.findCurrentIntersection(NavigationHelper.kt:378)
+        json.remove("details")
+        // json.put("details", JSONArray().put("max_speed"))
+        return json.toString()
+    }
+
     private fun fetchNavigateRoute(navigateUrl: String, requestBody: String): String? {
+        val preparedBody = prepareNavigateRequestBody(requestBody)
         return try {
             val connection = URL(navigateUrl).openConnection() as HttpURLConnection
             connection.requestMethod = "POST"
@@ -277,13 +299,14 @@ class NavigationActivity : AppCompatActivity() {
             connection.doOutput = true
             connection.outputStream.use { os ->
                 OutputStreamWriter(os, Charsets.UTF_8).use { writer ->
-                    writer.write(requestBody)
+                    writer.write(preparedBody)
                 }
             }
             if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                 connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
             } else {
-                Log.e(TAG, "Navigate request failed: ${connection.responseCode} ${connection.responseMessage}")
+                val errorBody = connection.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: ""
+                Log.e(TAG, "Navigate request failed: ${connection.responseCode} ${connection.responseMessage} - $errorBody")
                 null
             }
         } catch (e: Exception) {
@@ -473,6 +496,11 @@ class NavigationActivity : AppCompatActivity() {
                 lineJoin("round")
             )
         }
+
+        // Log last layers (location puck layers are typically added on top)
+        // val allLayers = style.layers.map { it.id }
+        // Log.i(TAG, "Last 10 layers: ${allLayers.takeLast(10)}")
+
         // Add below location puck shadow layer (if it exists), otherwise on top
         val shadowLayerId = "mapbox-location-shadow-layer"
         if (style.getLayer(shadowLayerId) != null) {
