@@ -29,9 +29,13 @@ class GraphHopperRouteFetcher(
     }
 
     init {
-        // Apply navigation parameters once
         requestJson.put("type", "mapbox")
         requestJson.put("ch.disable", true)
+
+        // Force empty snap_preventions to snap on everything, which is important for the current location
+        requestJson.put("snap_preventions", JSONArray())
+
+        // The navigate endpoint does not want some parameters:
         requestJson.remove("elevation")
         requestJson.remove("points_encoded")
         requestJson.remove("points_encoded_multiplier")

@@ -73,7 +73,8 @@ class NavigationActivity : AppCompatActivity() {
         private const val TAG = "NavigationActivity"
         private const val ROUTE_SOURCE_ID = "route-source"
         private const val ROUTE_LAYER_ID = "route-layer"
-        private const val DEFAULT_STYLE_URL = "https://tiles.mapilion.com/assets/osm-bright/style.json?key=b582abd4-d55d-4cb1-8f34-f4254cd52aa7"
+        private const val DEFAULT_STYLE_URL =
+            "https://tiles.mapilion.com/assets/osm-bright/style.json?key=b582abd4-d55d-4cb1-8f34-f4254cd52aa7"
         private const val LOCATION_PERMISSION_REQUEST = 1001
 
         // Set to true to simulate GPS along the route instead of using real GPS
@@ -106,9 +107,11 @@ class NavigationActivity : AppCompatActivity() {
     private var thenTurnIconRes by mutableStateOf<Int?>(null)
     private var roundaboutExit by mutableStateOf<Int?>(null)
 
-    // Route fetching
+    // For temporary storage after permission granted (and later for GraphHopperRouteFetcher)
     private var navigateUrl: String? = null
     private var requestJson: JSONObject? = null
+
+    // Route fetching
     private var routeFetcher: GraphHopperRouteFetcher? = null
     private var lastRouteProgress: RouteProgress? = null
 
@@ -228,12 +231,12 @@ class NavigationActivity : AppCompatActivity() {
                     .build()
             }
             map.setStyle(Style.Builder().fromUri(DEFAULT_STYLE_URL)) { style ->
-                checkLocationPermissionAndStart(style)
+                checkPermissionAndLoadInitialRoute(style)
             }
         }
     }
 
-    private fun checkLocationPermissionAndStart(style: Style) {
+    private fun checkPermissionAndLoadInitialRoute(style: Style) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED
         ) {
@@ -243,7 +246,7 @@ class NavigationActivity : AppCompatActivity() {
                 LOCATION_PERMISSION_REQUEST
             )
         } else {
-            fetchAndInitializeNavigation(style)
+            fetchInitialRoute(style)
         }
     }
 
@@ -255,9 +258,7 @@ class NavigationActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == LOCATION_PERMISSION_REQUEST) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                mapLibreMap?.style?.let { style ->
-                    fetchAndInitializeNavigation(style)
-                }
+                mapLibreMap?.style?.let { fetchInitialRoute(it) }
             } else {
                 Log.e(TAG, "Location permission denied")
                 finish()
@@ -265,7 +266,7 @@ class NavigationActivity : AppCompatActivity() {
         }
     }
 
-    private fun fetchAndInitializeNavigation(style: Style) {
+    private fun fetchInitialRoute(style: Style) {
         val url = navigateUrl ?: return
         val json = requestJson ?: return
 
@@ -276,6 +277,7 @@ class NavigationActivity : AppCompatActivity() {
                 override fun onResponseReceived(response: DirectionsResponse, routeProgress: RouteProgress) {
                     runOnUiThread { applyReroute(response) }
                 }
+
                 override fun onErrorReceived(throwable: Throwable) {
                     Log.e(TAG, "Reroute failed: ${throwable.message}", throwable)
                 }
@@ -423,6 +425,7 @@ class NavigationActivity : AppCompatActivity() {
                 override fun onCameraTrackingChanged(currentMode: Int) {
                     showRecenter = currentMode == CameraMode.NONE
                 }
+
                 override fun onCameraTrackingDismissed() {
                     showRecenter = true
                 }
@@ -550,8 +553,8 @@ class NavigationActivity : AppCompatActivity() {
 
     private fun isRoundaboutType(type: StepManeuver.Type?): Boolean {
         return type == StepManeuver.Type.ROUNDABOUT || type == StepManeuver.Type.ROTARY ||
-            type == StepManeuver.Type.ROUNDABOUT_TURN || type == StepManeuver.Type.EXIT_ROUNDABOUT ||
-            type == StepManeuver.Type.EXIT_ROTARY
+                type == StepManeuver.Type.ROUNDABOUT_TURN || type == StepManeuver.Type.EXIT_ROUNDABOUT ||
+                type == StepManeuver.Type.EXIT_ROTARY
     }
 
     private fun getManeuverIcon(
@@ -574,6 +577,7 @@ class NavigationActivity : AppCompatActivity() {
                     R.drawable.ic_roundabout
                 }
             }
+
             modifier == ManeuverModifier.Type.SHARP_LEFT -> R.drawable.ic_turn_sharp_left
             modifier == ManeuverModifier.Type.SHARP_RIGHT -> R.drawable.ic_turn_sharp_right
             modifier == ManeuverModifier.Type.SLIGHT_LEFT -> R.drawable.ic_turn_slight_left
@@ -626,6 +630,7 @@ class NavigationActivity : AppCompatActivity() {
                 val mins = totalMinutes % 60
                 String.format(Locale.getDefault(), "%d h %d min", hours, mins)
             }
+
             else -> String.format(Locale.getDefault(), "%d min", totalMinutes)
         }
     }
