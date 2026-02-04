@@ -256,8 +256,9 @@ class NavigationActivity : AppCompatActivity() {
     private fun fetchAndInitializeNavigation(navigateUrl: String, requestBody: String, style: Style) {
         this.navigateUrl = navigateUrl
         this.requestBody = requestBody
+        val location = lastKnownLocation
         Thread {
-            val routeJson = fetchNavigateRoute(navigateUrl, requestBody)
+            val routeJson = fetchNavigateRoute(navigateUrl, requestBody, location)
             runOnUiThread {
                 if (routeJson != null) {
                     initializeNavigation(routeJson, style)
@@ -269,10 +270,30 @@ class NavigationActivity : AppCompatActivity() {
         }.start()
     }
 
-    private fun prepareNavigateRequestBody(requestBody: String): String {
+    private fun prepareNavigateRequestBody(requestBody: String, currentLocation: Location?): String {
         val json = JSONObject(requestBody)
+
+        // Replace first point with current location if available
+        if (currentLocation != null) {
+            val points = json.getJSONArray("points")
+            val destination = points.getJSONArray(points.length() - 1)
+            val newPoints = JSONArray().apply {
+                put(JSONArray().apply {
+                    put(currentLocation.longitude)
+                    put(currentLocation.latitude)
+                })
+                put(destination)
+            }
+            json.put("points", newPoints)
+
+            if (currentLocation.hasBearing()) {
+                json.put("headings", JSONArray().put(currentLocation.bearing.toDouble()))
+            }
+        }
+
         // Force a few request parameters for navigation
         json.put("type", "mapbox")
+        json.put("ch.disable", true)
         json.remove("elevation")
         json.remove("points_encoded")
         json.remove("points_encoded_multiplier")
@@ -290,8 +311,8 @@ class NavigationActivity : AppCompatActivity() {
         return json.toString()
     }
 
-    private fun fetchNavigateRoute(navigateUrl: String, requestBody: String): String? {
-        val preparedBody = prepareNavigateRequestBody(requestBody)
+    private fun fetchNavigateRoute(navigateUrl: String, requestBody: String, currentLocation: Location?): String? {
+        val preparedBody = prepareNavigateRequestBody(requestBody, currentLocation)
         return try {
             val connection = URL(navigateUrl).openConnection() as HttpURLConnection
             connection.requestMethod = "POST"
@@ -384,22 +405,7 @@ class NavigationActivity : AppCompatActivity() {
                 val url = navigateUrl
                 val body = requestBody
                 if (url != null && body != null) {
-                    try {
-                        val json = JSONObject(body)
-                        val points = json.getJSONArray("points")
-                        val destination = points.getJSONArray(points.length() - 1)
-                        val newPoints = JSONArray().apply {
-                            put(JSONArray().apply {
-                                put(location.longitude)
-                                put(location.latitude)
-                            })
-                            put(destination)
-                        }
-                        json.put("points", newPoints)
-                        fetchAndReroute(url, json.toString())
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Failed to build reroute request: ${e.message}", e)
-                    }
+                    fetchAndReroute(url, body, location.toAndroidLocation())
                 }
             }
 
@@ -621,9 +627,9 @@ class NavigationActivity : AppCompatActivity() {
         }
     }
 
-    private fun fetchAndReroute(navigateUrl: String, requestBody: String) {
+    private fun fetchAndReroute(navigateUrl: String, requestBody: String, currentLocation: Location) {
         Thread {
-            val routeJson = fetchNavigateRoute(navigateUrl, requestBody)
+            val routeJson = fetchNavigateRoute(navigateUrl, requestBody, currentLocation)
             if (routeJson != null) {
                 runOnUiThread { applyReroute(routeJson) }
             } else {
