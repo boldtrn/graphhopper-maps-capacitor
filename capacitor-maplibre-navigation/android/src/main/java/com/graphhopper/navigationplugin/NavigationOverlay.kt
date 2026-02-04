@@ -54,6 +54,7 @@ fun NavigationScreen(
     remainingTime: String,
     remainingDistance: String,
     currentSpeed: String,
+    speedUnit: String,
     showRecenter: Boolean,
     thenTurnIconRes: Int?,
     roundaboutExit: Int?,
@@ -108,6 +109,7 @@ fun NavigationScreen(
                 }
                 SpeedPanel(
                     currentSpeed = currentSpeed,
+                    speedUnit = speedUnit,
                     modifier = if (showRecenter) Modifier.padding(top = 8.dp) else Modifier,
                 )
             }
@@ -234,8 +236,14 @@ private fun RecenterButton(
 @Composable
 private fun SpeedPanel(
     currentSpeed: String,
+    speedUnit: String,
     modifier: Modifier = Modifier,
 ) {
+    // Parse unit parts (e.g., "km/h" -> ["km", "h"], "mph" -> ["mph"])
+    val unitParts = speedUnit.split("/")
+    val topUnit = unitParts[0]
+    val bottomUnit = if (unitParts.size > 1) unitParts[1] else null
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.End,
@@ -253,30 +261,32 @@ private fun SpeedPanel(
             )
         )
 
-        // km/h stacked unit
+        // Speed unit display
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(start = 4.dp)
         ) {
             BasicText(
-                text = "km",
+                text = topUnit,
                 style = TextStyle(
                     fontSize = 11.sp,
                     color = Color(0xFF666666),
                 )
             )
-            Box(
-                modifier = Modifier
-                    .size(width = 16.dp, height = 1.dp)
-                    .background(Color(0xFF666666))
-            )
-            BasicText(
-                text = "h",
-                style = TextStyle(
-                    fontSize = 11.sp,
-                    color = Color(0xFF666666),
+            if (bottomUnit != null) {
+                Box(
+                    modifier = Modifier
+                        .size(width = 16.dp, height = 1.dp)
+                        .background(Color(0xFF666666))
                 )
-            )
+                BasicText(
+                    text = bottomUnit,
+                    style = TextStyle(
+                        fontSize = 11.sp,
+                        color = Color(0xFF666666),
+                    )
+                )
+            }
         }
     }
 }

@@ -9,6 +9,10 @@ export interface StartNavigationOptions {
    * JSON request body for POST /navigate
    */
   requestBody: string;
+  /**
+   * Show distances in miles/feet instead of km/m (default: false)
+   */
+  showDistanceInMiles?: boolean;
 }
 
 export interface MapLibreNavigationPlugin {

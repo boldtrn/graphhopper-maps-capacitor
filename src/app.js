@@ -84,10 +84,10 @@ if (Capacitor.isNativePlatform()) {
     });
 
     window.ghNativeNavigation = {
-        async start(navigateUrl, requestBody, onClose) {
+        async start(navigateUrl, requestBody, onClose, showDistanceInMiles = false) {
             onCloseCallback = onClose;
             console.info('GH Maps Navigation', 'Starting navigation');
-            MapLibreNavigation.startNavigation({ navigateUrl, requestBody })
+            MapLibreNavigation.startNavigation({ navigateUrl, requestBody, showDistanceInMiles })
                 .catch((error) => console.error('GH Maps Navigation', 'Failed to start:', error));
         },
         stop() {

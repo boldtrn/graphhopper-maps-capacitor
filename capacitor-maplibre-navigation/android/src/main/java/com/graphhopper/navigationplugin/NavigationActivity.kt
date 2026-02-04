@@ -63,10 +63,7 @@ import org.maplibre.navigation.android.navigation.ui.v5.voice.NavigationSpeechPl
 import org.maplibre.navigation.android.navigation.ui.v5.voice.SpeechAnnouncement
 import org.maplibre.navigation.android.navigation.ui.v5.voice.SpeechPlayer
 import org.maplibre.navigation.android.navigation.ui.v5.voice.SpeechPlayerProvider
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
-import kotlin.math.roundToInt
 
 class NavigationActivity : AppCompatActivity() {
     companion object {
@@ -89,7 +86,6 @@ class NavigationActivity : AppCompatActivity() {
     // Navigation components
     private var navigation: AndroidMapLibreNavigation? = null
     private var currentRoute: DirectionsRoute? = null
-    private var lastKnownLocation: Location? = null
 
     // Voice
     private var speechPlayer: SpeechPlayer? = null
@@ -103,6 +99,7 @@ class NavigationActivity : AppCompatActivity() {
     private var remainingTime by mutableStateOf("")
     private var remainingDistance by mutableStateOf("")
     private var currentSpeed by mutableStateOf("")
+    private var speedUnit by mutableStateOf("km/h")
     private var showRecenter by mutableStateOf(false)
     private var thenTurnIconRes by mutableStateOf<Int?>(null)
     private var roundaboutExit by mutableStateOf<Int?>(null)
@@ -115,8 +112,8 @@ class NavigationActivity : AppCompatActivity() {
     private var routeFetcher: GraphHopperRouteFetcher? = null
     private var lastRouteProgress: RouteProgress? = null
 
-    // Current step tracking
-    private var distanceToNextManeuver = 0.0
+    // Unit settings
+    private var showDistanceInMiles = false
 
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -146,6 +143,7 @@ class NavigationActivity : AppCompatActivity() {
                 remainingTime = remainingTime,
                 remainingDistance = remainingDistance,
                 currentSpeed = currentSpeed,
+                speedUnit = speedUnit,
                 showRecenter = showRecenter,
                 thenTurnIconRes = thenTurnIconRes,
                 roundaboutExit = roundaboutExit,
@@ -180,6 +178,7 @@ class NavigationActivity : AppCompatActivity() {
         // Parse request from intent
         val url = intent.getStringExtra(MapLibreNavigationPlugin.EXTRA_NAVIGATE_URL)
         val requestBody = intent.getStringExtra(MapLibreNavigationPlugin.EXTRA_REQUEST_BODY)
+        showDistanceInMiles = intent.getBooleanExtra(MapLibreNavigationPlugin.EXTRA_SHOW_DISTANCE_IN_MILES, false)
         if (url == null || requestBody == null) {
             Log.e(TAG, "No navigate URL or request body provided")
             finish()
@@ -344,7 +343,6 @@ class NavigationActivity : AppCompatActivity() {
 
                 runOnUiThread {
                     val androidLocation = location.toAndroidLocation()
-                    lastKnownLocation = androidLocation
                     updateNavigationUI(androidLocation, routeProgress)
 
                     // Update location puck
@@ -364,7 +362,6 @@ class NavigationActivity : AppCompatActivity() {
             navigation?.addOffRouteListener { location ->
                 val progress = lastRouteProgress
                 Log.i(TAG, "Off route detected at ${location.latitude}, ${location.longitude}, leg ${progress?.legIndex}")
-                lastKnownLocation = location.toAndroidLocation()
                 if (progress != null) {
                     routeFetcher?.findRouteFromRouteProgress(location, progress)
                 }
@@ -505,8 +502,8 @@ class NavigationActivity : AppCompatActivity() {
             roundaboutExit = if (isRoundaboutType(type)) upcomingManeuver?.exit else null
 
             // Distance to next maneuver (= remaining distance in current step)
-            distanceToNextManeuver = currentStepProgress.distanceRemaining
-            distanceToTurn = formatDistance(distanceToNextManeuver)
+            val distanceToNextManeuver = currentStepProgress.distanceRemaining
+            distanceToTurn = Converters.formatDistance(distanceToNextManeuver, showDistanceInMiles, getLocale())
 
             // "Then" turn — show when the next maneuver is close and there's a sub instruction
             val sub = bannerInstruction?.sub
@@ -518,19 +515,20 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         // Update remaining distance and time
+        val locale = getLocale()
         val distanceRemainingVal = routeProgress.distanceRemaining
         val durationRemaining = routeProgress.durationRemaining
 
-        remainingDistance = formatDistance(distanceRemainingVal)
-        remainingTime = formatDuration(durationRemaining)
+        remainingDistance = Converters.formatDistance(distanceRemainingVal, showDistanceInMiles, locale)
+        remainingTime = Converters.formatDuration(durationRemaining, locale)
 
         // Calculate and display ETA
         val etaMillis = System.currentTimeMillis() + (durationRemaining * 1000).toLong()
-        eta = formatTime(etaMillis)
+        eta = Converters.formatTime(etaMillis, locale)
 
-        // Update current speed (number only, unit is in the composable)
-        val speedKmh = (location.speed * 3.6f).roundToInt()
-        currentSpeed = speedKmh.toString()
+        // Update current speed
+        currentSpeed = Converters.formatSpeed(location.speed, showDistanceInMiles).toString()
+        speedUnit = Converters.getSpeedUnit(showDistanceInMiles)
 
         // Update camera to follow location
         updateCameraPosition(location)
@@ -614,31 +612,7 @@ class NavigationActivity : AppCompatActivity() {
         }
     }
 
-    private fun formatDistance(meters: Double): String {
-        return when {
-            meters >= 10000 -> String.format(Locale.getDefault(), "%.0f km", meters / 1000)
-            meters >= 1000 -> String.format(Locale.getDefault(), "%.1f km", meters / 1000)
-            else -> String.format(Locale.getDefault(), "%d m", meters.roundToInt())
-        }
-    }
-
-    private fun formatDuration(seconds: Double): String {
-        val totalMinutes = (seconds / 60).roundToInt()
-        return when {
-            totalMinutes >= 60 -> {
-                val hours = totalMinutes / 60
-                val mins = totalMinutes % 60
-                String.format(Locale.getDefault(), "%d h %d min", hours, mins)
-            }
-
-            else -> String.format(Locale.getDefault(), "%d min", totalMinutes)
-        }
-    }
-
-    private fun formatTime(millis: Long): String {
-        val formatter = SimpleDateFormat("HH:mm", Locale.getDefault())
-        return formatter.format(Date(millis))
-    }
+    private fun getLocale(): Locale = resources.configuration.locales[0]
 
     override fun onStart() {
         super.onStart()
