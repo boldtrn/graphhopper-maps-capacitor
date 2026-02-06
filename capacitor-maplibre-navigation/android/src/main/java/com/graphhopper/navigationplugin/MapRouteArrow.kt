@@ -40,9 +40,10 @@ import org.maplibre.geojson.common.toJvm
 import org.maplibre.geojson.model.LineString
 import org.maplibre.geojson.model.Point
 import org.maplibre.navigation.core.routeprogress.RouteProgress
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
+import org.maplibre.navigation.core.utils.Constants
+import org.maplibre.turf.TurfConstants
+import org.maplibre.turf.TurfMeasurement
+import org.maplibre.turf.TurfMisc
 
 /**
  * Draws an arrow on the map indicating the upcoming maneuver direction.
@@ -225,145 +226,57 @@ class MapRouteArrow(
      * Updates the arrow to show the upcoming maneuver based on route progress.
      */
     fun addUpcomingManeuverArrow(routeProgress: RouteProgress) {
-        val currentStepPoints = routeProgress.currentLegProgress?.currentStepProgress?.step?.geometry?.let {
-            decodePolyline(it)
-        } ?: return
+        val currentGeometry = routeProgress.currentLegProgress?.currentStepProgress?.step?.geometry ?: return
+        val upcomingGeometry = routeProgress.currentLegProgress?.upComingStep?.geometry ?: return
 
-        val upcomingStepPoints = routeProgress.currentLegProgress?.upComingStep?.geometry?.let {
-            decodePolyline(it)
-        } ?: return
+        // Decode polylines using LineString constructor
+        val currentLine = LineString(currentGeometry, Constants.PRECISION_6)
+        val upcomingLine = LineString(upcomingGeometry, Constants.PRECISION_6)
 
-        if (currentStepPoints.size < 2 || upcomingStepPoints.size < 2) {
+        if (currentLine.coordinates.size < 2 || upcomingLine.coordinates.size < 2) {
             return
         }
 
-        // Get arrow points from current and upcoming steps
-        val arrowPoints = obtainArrowPointsFrom(currentStepPoints, upcomingStepPoints)
+        // Convert to JVM types for Turf operations
+        val currentLineJvm = currentLine.toJvm() as org.maplibre.geojson.LineString
+        val upcomingLineJvm = upcomingLine.toJvm() as org.maplibre.geojson.LineString
+
+        // Slice from end of current step
+        val currentLength = TurfMeasurement.length(currentLineJvm, TurfConstants.UNIT_METERS)
+        val sliceStart = maxOf(0.0, currentLength - ARROW_SLICE_DISTANCE)
+        val slicedCurrentJvm = TurfMisc.lineSliceAlong(currentLineJvm, sliceStart, currentLength, TurfConstants.UNIT_METERS)
+
+        // Slice from start of upcoming step
+        val slicedUpcomingJvm = TurfMisc.lineSliceAlong(upcomingLineJvm, 0.0, ARROW_SLICE_DISTANCE, TurfConstants.UNIT_METERS)
+
+        // Combine points for arrow
+        val arrowPoints = mutableListOf<org.maplibre.geojson.Point>()
+        arrowPoints.addAll(slicedCurrentJvm.coordinates())
+        // Skip first point of upcoming to avoid duplicate at junction
+        val upcomingCoords = slicedUpcomingJvm.coordinates()
+        if (upcomingCoords.size > 1) {
+            arrowPoints.addAll(upcomingCoords.drop(1))
+        }
+
         if (arrowPoints.size < 2) {
             return
         }
 
         // Update arrow shaft
-        updateArrowShaftWith(arrowPoints)
+        val arrowLineString = org.maplibre.geojson.LineString.fromLngLats(arrowPoints)
+        arrowShaftGeoJsonSource?.setGeoJson(arrowLineString)
 
-        // Update arrow head
-        updateArrowHeadWith(arrowPoints)
-    }
-
-    private fun obtainArrowPointsFrom(
-        currentStepPoints: List<Point>,
-        upcomingStepPoints: List<Point>
-    ): List<Point> {
-        val arrowPoints = mutableListOf<Point>()
-
-        // Slice from end of current step (reversed)
-        val reversedCurrentPoints = currentStepPoints.reversed()
-        val slicedCurrentPoints = lineSliceAlong(reversedCurrentPoints, ARROW_SLICE_DISTANCE)
-        arrowPoints.addAll(slicedCurrentPoints.reversed())
-
-        // Slice from start of upcoming step
-        val slicedUpcomingPoints = lineSliceAlong(upcomingStepPoints, ARROW_SLICE_DISTANCE)
-        // Skip first point to avoid duplicate at junction
-        if (slicedUpcomingPoints.isNotEmpty()) {
-            arrowPoints.addAll(slicedUpcomingPoints.drop(1))
-        }
-
-        return arrowPoints
-    }
-
-    /**
-     * Slices a line to the specified distance in meters.
-     */
-    private fun lineSliceAlong(points: List<Point>, distanceMeters: Double): List<Point> {
-        if (points.size < 2) return points
-
-        val result = mutableListOf<Point>()
-        var remainingDistance = distanceMeters
-
-        result.add(points[0])
-
-        for (i in 0 until points.size - 1) {
-            val from = points[i]
-            val to = points[i + 1]
-            val segmentDistance = haversineDistance(from, to)
-
-            if (segmentDistance <= remainingDistance) {
-                result.add(to)
-                remainingDistance -= segmentDistance
-            } else {
-                // Interpolate point at remaining distance
-                val fraction = remainingDistance / segmentDistance
-                val interpolatedPoint = interpolate(from, to, fraction)
-                result.add(interpolatedPoint)
-                break
-            }
-        }
-
-        return result
-    }
-
-    /**
-     * Calculates haversine distance between two points in meters.
-     */
-    private fun haversineDistance(p1: Point, p2: Point): Double {
-        val R = 6371000.0 // Earth's radius in meters
-        val lat1 = Math.toRadians(p1.latitude)
-        val lat2 = Math.toRadians(p2.latitude)
-        val dLat = Math.toRadians(p2.latitude - p1.latitude)
-        val dLon = Math.toRadians(p2.longitude - p1.longitude)
-
-        val a = sin(dLat / 2) * sin(dLat / 2) +
-                cos(lat1) * cos(lat2) *
-                sin(dLon / 2) * sin(dLon / 2)
-        val c = 2 * atan2(kotlin.math.sqrt(a), kotlin.math.sqrt(1 - a))
-
-        return R * c
-    }
-
-    /**
-     * Interpolates between two points.
-     */
-    private fun interpolate(p1: Point, p2: Point, fraction: Double): Point {
-        val lng = p1.longitude + (p2.longitude - p1.longitude) * fraction
-        val lat = p1.latitude + (p2.latitude - p1.latitude) * fraction
-        return Point(lng, lat)
-    }
-
-    /**
-     * Calculates bearing between two points in degrees.
-     */
-    private fun bearing(from: Point, to: Point): Double {
-        val lat1 = Math.toRadians(from.latitude)
-        val lat2 = Math.toRadians(to.latitude)
-        val dLon = Math.toRadians(to.longitude - from.longitude)
-
-        val y = sin(dLon) * cos(lat2)
-        val x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon)
-
-        return (Math.toDegrees(atan2(y, x)) + 360) % 360
-    }
-
-    private fun updateArrowShaftWith(arrowPoints: List<Point>) {
-        val lineString = LineString(arrowPoints)
-        // Pass geometry directly - GeoJsonSource accepts Geometry
-        arrowShaftGeoJsonSource?.setGeoJson(lineString.toJvm())
-    }
-
-    private fun updateArrowHeadWith(arrowPoints: List<Point>) {
-        if (arrowPoints.size < 2) return
-
-        // Position at last point, bearing from second-to-last to last
+        // Update arrow head with bearing
         val lastPoint = arrowPoints.last()
         val secondToLast = arrowPoints[arrowPoints.size - 2]
-        val bearingValue = bearing(secondToLast, lastPoint)
+        val bearingValue = TurfMeasurement.bearing(secondToLast, lastPoint)
 
-        // Build GeoJSON Feature string with bearing property
         val geoJson = """
             {
                 "type": "Feature",
                 "geometry": {
                     "type": "Point",
-                    "coordinates": [${lastPoint.longitude}, ${lastPoint.latitude}]
+                    "coordinates": [${lastPoint.longitude()}, ${lastPoint.latitude()}]
                 },
                 "properties": {
                     "bearing": $bearingValue
@@ -371,46 +284,6 @@ class MapRouteArrow(
             }
         """.trimIndent()
         arrowHeadGeoJsonSource?.setGeoJson(geoJson)
-    }
-
-    /**
-     * Decodes a polyline string into a list of Points.
-     * Uses precision 6 (GraphHopper default).
-     */
-    private fun decodePolyline(encoded: String, precision: Int = 6): List<Point> {
-        val factor = Math.pow(10.0, precision.toDouble())
-        val len = encoded.length
-        var index = 0
-        var lat = 0
-        var lng = 0
-        val coordinates = mutableListOf<Point>()
-
-        while (index < len) {
-            var result = 0
-            var shift = 0
-            var b: Int
-            do {
-                b = encoded[index++].code - 63
-                result = result or ((b and 0x1f) shl shift)
-                shift += 5
-            } while (b >= 0x20)
-            val dlat = if ((result and 1) != 0) (result shr 1).inv() else result shr 1
-            lat += dlat
-
-            result = 0
-            shift = 0
-            do {
-                b = encoded[index++].code - 63
-                result = result or ((b and 0x1f) shl shift)
-                shift += 5
-            } while (b >= 0x20)
-            val dlng = if ((result and 1) != 0) (result shr 1).inv() else result shr 1
-            lng += dlng
-
-            coordinates.add(Point(lng / factor, lat / factor))
-        }
-
-        return coordinates
     }
 
     /**
