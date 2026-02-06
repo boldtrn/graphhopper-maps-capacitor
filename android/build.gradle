@@ -21,6 +21,7 @@ apply from: "variables.gradle"
 
 allprojects {
     repositories {
+        // mavenLocal()
         google()
         mavenCentral()
     }

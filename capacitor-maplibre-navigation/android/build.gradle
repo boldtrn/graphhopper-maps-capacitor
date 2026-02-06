@@ -65,6 +65,14 @@ dependencies {
     implementation 'org.maplibre.navigation:navigation-core:5.0.0-pre12'
     implementation 'org.maplibre.navigation:navigation-ui-android:5.0.0-pre12'
 
+    // implementation 'org.maplibre.navigation:navigation-core:5.1.0-SNAPSHOT'
+    // implementation 'org.maplibre.navigation:navigation-ui-android:5.1.0-SNAPSHOT'
+
+    // build locally:
+    // VERSION=5.1.0-SNAPSHOT ./gradlew :maplibre-navigation-core:publishToMavenLocal :libandroid-navigation-ui:publishToMavenLocal
+    // then use here and add mavenLocal() in android/build.gradle
+    // allprojects { repositories { ...HERE... } }
+
     testImplementation "junit:junit:$junitVersion"
     testImplementation "org.json:json:20231013"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"

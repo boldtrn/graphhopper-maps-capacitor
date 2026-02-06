@@ -332,8 +332,7 @@ class NavigationActivity : AppCompatActivity() {
 
                 snapToRoute = false
                 // snapping works in general but has sometimes strange back-and-forth behavour
-                // TODO why would we need to set useDefaultLocationEngine=false?
-                // https://github.com/maplibre/maplibre-navigation-android/blob/534334f768ca14fbe9ac50d8d29859ec1c54b4de/app/src/main/java/org/maplibre/navigation/android/example/SnapToRouteNavigationActivity.kt#L154
+                // probably related to: https://github.com/maplibre/maplibre-navigation-android/issues/67
             )
             navigation = AndroidMapLibreNavigation(
                 context = applicationContext,
