@@ -86,6 +86,7 @@ class NavigationActivity : AppCompatActivity() {
     // Navigation components
     private var navigation: AndroidMapLibreNavigation? = null
     private var currentRoute: DirectionsRoute? = null
+    private var mapRouteArrow: MapRouteArrow? = null
 
     // Voice
     private var speechPlayer: SpeechPlayer? = null
@@ -351,6 +352,9 @@ class NavigationActivity : AppCompatActivity() {
 
                     // Update location puck
                     mapLibreMap?.locationComponent?.forceLocationUpdate(androidLocation)
+
+                    // Update maneuver arrow
+                    mapRouteArrow?.addUpcomingManeuverArrow(routeProgress)
                 }
             }
 
@@ -373,6 +377,9 @@ class NavigationActivity : AppCompatActivity() {
 
             // Draw route on map first so the location puck renders on top
             drawRoute(style, currentRoute!!)
+
+            // Initialize maneuver arrow (above route layer)
+            mapRouteArrow = MapRouteArrow(mapView, mapLibreMap!!, R.style.NavigationMapRoute, ROUTE_LAYER_ID)
 
             // Setup location component for navigation puck
             setupLocationComponent(style)

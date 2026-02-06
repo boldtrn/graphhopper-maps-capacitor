@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="NavigationMapRoute">
+        <item name="upcomingManeuverArrowColor">#FF4A90D9</item>
+        <item name="upcomingManeuverArrowBorderColor">#FFFFFFFF</item>
+    </style>
+</resources>
