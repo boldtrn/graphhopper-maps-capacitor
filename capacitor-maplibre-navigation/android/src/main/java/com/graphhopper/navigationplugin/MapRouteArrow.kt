@@ -69,8 +69,8 @@ class MapRouteArrow(
         private const val ARROW_HEAD_CASING_ICON = "mapbox-navigation-arrow-head-casing-icon"
 
         // Arrow dimensions
-        private const val ARROW_HEAD_ICON_SIZE = 0.6f
-        private const val ARROW_HEAD_CASING_ICON_SIZE = 0.75f
+        private const val ARROW_HEAD_ICON_SIZE = 0.45f
+        private const val ARROW_HEAD_CASING_ICON_SIZE = 0.6f
         private const val ARROW_SHAFT_LINE_WIDTH = 10f
         private const val ARROW_SHAFT_CASING_LINE_WIDTH = 16f
 
@@ -82,8 +82,8 @@ class MapRouteArrow(
     }
 
     private val context: Context = mapView.context
-    private var arrowColor: Int = Color.parseColor("#4A90D9")
-    private var arrowBorderColor: Int = Color.WHITE
+    private var arrowColor: Int = Color.WHITE
+    private var arrowBorderColor: Int = Color.BLACK
     private val arrowLayerIds = mutableListOf<String>()
 
     private var arrowShaftGeoJsonSource: GeoJsonSource? = null
@@ -133,10 +133,10 @@ class MapRouteArrow(
             style.addImage(ARROW_HEAD_CASING_ICON, it)
         }
 
-        // Shaft casing layer (blue border)
+        // Shaft casing layer (white border)
         val shaftCasingLayer = LineLayer(ARROW_SHAFT_CASING_LAYER_ID, ARROW_SHAFT_SOURCE_ID).apply {
             setProperties(
-                lineColor(arrowColor),
+                lineColor(arrowBorderColor),
                 lineWidth(ARROW_SHAFT_CASING_LINE_WIDTH),
                 lineCap(Property.LINE_CAP_ROUND),
                 lineJoin(Property.LINE_JOIN_ROUND),
@@ -157,10 +157,10 @@ class MapRouteArrow(
         }
         arrowLayerIds.add(ARROW_SHAFT_CASING_LAYER_ID)
 
-        // Shaft layer (white fill)
+        // Shaft layer (blue fill)
         val shaftLayer = LineLayer(ARROW_SHAFT_LAYER_ID, ARROW_SHAFT_SOURCE_ID).apply {
             setProperties(
-                lineColor(arrowBorderColor),
+                lineColor(arrowColor),
                 lineWidth(ARROW_SHAFT_LINE_WIDTH),
                 lineCap(Property.LINE_CAP_ROUND),
                 lineJoin(Property.LINE_JOIN_ROUND),
@@ -177,7 +177,7 @@ class MapRouteArrow(
         style.addLayerAbove(shaftLayer, ARROW_SHAFT_CASING_LAYER_ID)
         arrowLayerIds.add(ARROW_SHAFT_LAYER_ID)
 
-        // Arrow head casing layer (blue border - color baked in drawable)
+        // Arrow head casing layer (white border - color baked in drawable)
         val headCasingLayer = SymbolLayer(ARROW_HEAD_CASING_LAYER_ID, ARROW_HEAD_SOURCE_ID).apply {
             setProperties(
                 iconImage(ARROW_HEAD_CASING_ICON),
@@ -199,7 +199,7 @@ class MapRouteArrow(
         style.addLayerAbove(headCasingLayer, ARROW_SHAFT_LAYER_ID)
         arrowLayerIds.add(ARROW_HEAD_CASING_LAYER_ID)
 
-        // Arrow head layer (white fill - color baked in drawable)
+        // Arrow head layer (blue fill - color baked in drawable)
         val headLayer = SymbolLayer(ARROW_HEAD_LAYER_ID, ARROW_HEAD_SOURCE_ID).apply {
             setProperties(
                 iconImage(ARROW_HEAD_ICON),
