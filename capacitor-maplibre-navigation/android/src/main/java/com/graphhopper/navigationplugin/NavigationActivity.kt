@@ -351,8 +351,11 @@ class NavigationActivity : AppCompatActivity() {
                     val androidLocation = location.toAndroidLocation()
                     updateNavigationUI(androidLocation, routeProgress)
 
-                    // Update location puck
-                    mapLibreMap?.locationComponent?.forceLocationUpdate(androidLocation)
+                    // Skip location/camera updates (rotation) when stationary
+                    if (androidLocation.speed > 0f) {
+                        mapLibreMap?.locationComponent?.forceLocationUpdate(androidLocation)
+                        updateCameraPosition(androidLocation)
+                    }
 
                     // Update maneuver arrow
                     mapRouteArrow?.addUpcomingManeuverArrow(routeProgress)
@@ -560,9 +563,6 @@ class NavigationActivity : AppCompatActivity() {
                 speedLimitUnlimited = false
             }
         }
-
-        // Update camera to follow location
-        updateCameraPosition(location)
     }
 
     private fun updateCameraPosition(location: Location) {
