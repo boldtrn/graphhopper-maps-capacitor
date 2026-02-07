@@ -227,6 +227,7 @@ class NavigationActivity : AppCompatActivity() {
             // Hide attribution (covered by UI anyway)
             map.uiSettings.isAttributionEnabled = false
             map.uiSettings.isLogoEnabled = false
+
             // Set initial camera to start position
             startPosition?.let {
                 map.cameraPosition = CameraPosition.Builder()
@@ -442,12 +443,9 @@ class NavigationActivity : AppCompatActivity() {
     }
 
     private fun recenterCamera() {
-        cameraTrackingStarted = false
         showRecenter = false
         mapLibreMap?.locationComponent?.apply {
             cameraMode = CameraMode.TRACKING_GPS
-            val topPadding = mapView.height * 0.25
-            paddingWhileTracking(doubleArrayOf(0.0, topPadding, 0.0, 0.0))
             zoomWhileTracking(17.0)
             tiltWhileTracking(45.0)
         }
@@ -567,16 +565,11 @@ class NavigationActivity : AppCompatActivity() {
         updateCameraPosition(location)
     }
 
-    private var cameraTrackingStarted = false
-
     private fun updateCameraPosition(location: Location) {
         mapLibreMap?.locationComponent?.apply {
-            if (!cameraTrackingStarted) {
-                cameraTrackingStarted = true
-                // Shift the focal point down so the arrow sits in the lower third
-                val topPadding = mapView.height * 0.25
-                paddingWhileTracking(doubleArrayOf(0.0, topPadding, 0.0, 0.0))
-            }
+            // Shift the focal point down so the puck sits in the lower third
+            val topPadding = mapView.height * 0.25
+            paddingWhileTracking(doubleArrayOf(0.0, topPadding, 0.0, 0.0))
             zoomWhileTracking(17.0)
             tiltWhileTracking(45.0)
         }
