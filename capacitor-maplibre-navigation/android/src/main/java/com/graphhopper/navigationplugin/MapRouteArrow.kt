@@ -79,7 +79,11 @@ class MapRouteArrow(
 
         // Distance in meters to slice for arrow (each side of junction)
         private const val ARROW_SLICE_DISTANCE = 25.0
-        private const val ARROW_SHAFT_TRIM_DISTANCE = 3.0
+
+        // Offset to push the arrow head forward so its base aligns with the shaft end.
+        // The arrowhead notch is ~10 icon-units below center in the 48x48 icon.
+        // Per the spec this is multiplied by iconSize to get final pixels.
+        private val ARROW_HEAD_OFFSET = arrayOf(0f, -10f)
     }
 
     private val context: Context = mapView.context
@@ -187,6 +191,7 @@ class MapRouteArrow(
                 iconIgnorePlacement(true),
                 iconRotationAlignment(Property.ICON_ROTATION_ALIGNMENT_MAP),
                 iconRotate(Expression.get("bearing")),
+                iconOffset(ARROW_HEAD_OFFSET),
                 visibility(Property.VISIBLE),
                 iconOpacity(
                     Expression.step(
@@ -209,6 +214,7 @@ class MapRouteArrow(
                 iconIgnorePlacement(true),
                 iconRotationAlignment(Property.ICON_ROTATION_ALIGNMENT_MAP),
                 iconRotate(Expression.get("bearing")),
+                iconOffset(ARROW_HEAD_OFFSET),
                 visibility(Property.VISIBLE),
                 iconOpacity(
                     Expression.step(
@@ -263,15 +269,8 @@ class MapRouteArrow(
             return
         }
 
-        // Update arrow shaft (trim end so it doesn't poke through the arrow head)
-        val fullShaftLine = org.maplibre.geojson.LineString.fromLngLats(arrowPoints)
-        val shaftLength = TurfMeasurement.length(fullShaftLine, TurfConstants.UNIT_METERS)
-        val trimmedEnd = maxOf(0.0, shaftLength - ARROW_SHAFT_TRIM_DISTANCE)
-        val arrowLineString = if (trimmedEnd > 0.0) {
-            TurfMisc.lineSliceAlong(fullShaftLine, 0.0, trimmedEnd, TurfConstants.UNIT_METERS)
-        } else {
-            fullShaftLine
-        }
+        // Update arrow shaft (head icon draws on top, so underlap is hidden)
+        val arrowLineString = org.maplibre.geojson.LineString.fromLngLats(arrowPoints)
         arrowShaftGeoJsonSource?.setGeoJson(arrowLineString)
 
         // Update arrow head with bearing
