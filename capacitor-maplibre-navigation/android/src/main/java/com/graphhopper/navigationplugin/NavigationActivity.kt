@@ -624,6 +624,7 @@ class NavigationActivity : AppCompatActivity() {
             }
 
             speechPlayer?.onOffRoute()
+            speechPlayer?.play(SpeechAnnouncement.builder().announcement("Rerouting").build())
 
             val newRoute = routes.first().copy(
                 routeOptions = createWtfObject()
