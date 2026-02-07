@@ -78,7 +78,8 @@ class MapRouteArrow(
         private const val MIN_ARROW_ZOOM = 10.0f
 
         // Distance in meters to slice for arrow (each side of junction)
-        private const val ARROW_SLICE_DISTANCE = 15.0
+        private const val ARROW_SLICE_DISTANCE = 25.0
+        private const val ARROW_SHAFT_TRIM_DISTANCE = 3.0
     }
 
     private val context: Context = mapView.context
@@ -262,8 +263,15 @@ class MapRouteArrow(
             return
         }
 
-        // Update arrow shaft
-        val arrowLineString = org.maplibre.geojson.LineString.fromLngLats(arrowPoints)
+        // Update arrow shaft (trim end so it doesn't poke through the arrow head)
+        val fullShaftLine = org.maplibre.geojson.LineString.fromLngLats(arrowPoints)
+        val shaftLength = TurfMeasurement.length(fullShaftLine, TurfConstants.UNIT_METERS)
+        val trimmedEnd = maxOf(0.0, shaftLength - ARROW_SHAFT_TRIM_DISTANCE)
+        val arrowLineString = if (trimmedEnd > 0.0) {
+            TurfMisc.lineSliceAlong(fullShaftLine, 0.0, trimmedEnd, TurfConstants.UNIT_METERS)
+        } else {
+            fullShaftLine
+        }
         arrowShaftGeoJsonSource?.setGeoJson(arrowLineString)
 
         // Update arrow head with bearing

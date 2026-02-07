@@ -477,9 +477,12 @@ class NavigationActivity : AppCompatActivity() {
         // val allLayers = style.layers.map { it.id }
         // Log.i(TAG, "Last 10 layers: ${allLayers.takeLast(10)}")
 
-        // Add below location puck shadow layer (if it exists), otherwise on top
+        // Add below arrow layers (if they exist from a previous draw), else below puck shadow
+        val arrowCasingLayerId = "mapbox-navigation-arrow-shaft-casing-layer"
         val shadowLayerId = "mapbox-location-shadow-layer"
-        if (style.getLayer(shadowLayerId) != null) {
+        if (style.getLayer(arrowCasingLayerId) != null) {
+            style.addLayerBelow(routeLayer, arrowCasingLayerId)
+        } else if (style.getLayer(shadowLayerId) != null) {
             style.addLayerBelow(routeLayer, shadowLayerId)
         } else {
             style.addLayer(routeLayer)
