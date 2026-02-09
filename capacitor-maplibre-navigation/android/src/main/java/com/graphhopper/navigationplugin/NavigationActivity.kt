@@ -608,7 +608,7 @@ class NavigationActivity : AppCompatActivity() {
             modifier == ManeuverModifier.Type.SLIGHT_RIGHT -> R.drawable.ic_turn_slight_right
             modifier == ManeuverModifier.Type.LEFT -> R.drawable.ic_turn_left
             modifier == ManeuverModifier.Type.RIGHT -> R.drawable.ic_turn_right
-            modifier == ManeuverModifier.Type.UTURN -> R.drawable.ic_turn_sharp_left
+            modifier == ManeuverModifier.Type.UTURN -> R.drawable.ic_uturn
             modifier == ManeuverModifier.Type.STRAIGHT -> R.drawable.ic_straight
             else -> R.drawable.ic_straight
         }
@@ -624,6 +624,7 @@ class NavigationActivity : AppCompatActivity() {
             }
 
             speechPlayer?.onOffRoute()
+            // TODO I18N
             speechPlayer?.play(SpeechAnnouncement.builder().announcement("Rerouting").build())
 
             val newRoute = routes.first().copy(

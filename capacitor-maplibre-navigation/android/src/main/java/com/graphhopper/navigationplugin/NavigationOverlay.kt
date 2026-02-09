@@ -458,6 +458,7 @@ private fun ThenPanel(
             .padding(horizontal = 10.dp, vertical = 6.dp)
     ) {
         BasicText(
+            // TODO I18N
             text = "Then",
             style = TextStyle(
                 fontSize = 14.sp,
