@@ -151,21 +151,25 @@ class GraphHopperRouteFetcher(
         val points = request.getJSONArray("points")
         Log.d(TAG, "Navigate request with ${points.length()} points: ${body}")
         val connection = URL(navigateUrl).openConnection() as HttpURLConnection
-        connection.requestMethod = "POST"
-        connection.setRequestProperty("Content-Type", "application/json")
-        connection.doOutput = true
-        connection.outputStream.use { os ->
-            OutputStreamWriter(os, Charsets.UTF_8).use { writer ->
-                writer.write(body)
+        try {
+            connection.requestMethod = "POST"
+            connection.setRequestProperty("Content-Type", "application/json")
+            connection.doOutput = true
+            connection.outputStream.use { os ->
+                OutputStreamWriter(os, Charsets.UTF_8).use { writer ->
+                    writer.write(body)
+                }
             }
-        }
 
-        return if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-            connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-        } else {
-            val errorBody = connection.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: ""
-            Log.e(TAG, "Request failed: ${connection.responseCode} ${connection.responseMessage} - $errorBody")
-            null
+            return if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+            } else {
+                val errorBody = connection.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: ""
+                Log.e(TAG, "Request failed: ${connection.responseCode} ${connection.responseMessage} - $errorBody")
+                null
+            }
+        } finally {
+            connection.disconnect()
         }
     }
 }
