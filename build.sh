@@ -6,7 +6,8 @@ cp config.js graphhopper-maps/
 
 echo "Building capacitor-maplibre-navigation plugin..."
 cd capacitor-maplibre-navigation
-npm ci --ignore-scripts
+npm ci 
+# --ignore-scripts -> Cannot find module '../build/Release/sharp-linux-x64.node'
 npm run build
 cd ..
 
