@@ -20,10 +20,9 @@ mv dist/bundle.*.js dist/bundle.js
 cd ..
 
 echo "Building wrapper app..."
-npm ci
-# --ignore-scripts
+npm ci --ignore-scripts
 # add sharp module manually (native was ignored due to option)
-# npm install --ignore-scripts sharp @img/sharp-linux-x64
+npm install --ignore-scripts sharp @img/sharp-linux-x64
 
 # Create dist folder
 npm run build
