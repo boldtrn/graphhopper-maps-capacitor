@@ -6,10 +6,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: 'true'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: v24.12.0
           cache: 'npm'
@@ -19,7 +19,7 @@ jobs:
       - name: Build capacitor-maplibre-navigation plugin                                                              
         working-directory: ./capacitor-maplibre-navigation                                                            
         run: |                                                                                                        
-          npm ci                                                                                                      
+          npm ci --ignore-scripts                                                                                                     
           npm run build       
       - name: Build graphhopper-maps submodule
         working-directory: ./graphhopper-maps
