@@ -25,6 +25,7 @@
     "@capacitor/core": "^8.0.1",
     "@capacitor/filesystem": "^8.1.0",
     "@capacitor/share": "^8.0.0",
+    "capacitor-maplibre-navigation": "file:capacitor-maplibre-navigation",
     "graphhopper-maps-react": "file:graphhopper-maps"
   },
   "devDependencies": {

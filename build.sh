@@ -1,17 +1,28 @@
 #!/bin/bash
 
+set -e
+
 cp config.js graphhopper-maps/
 
-# Build GraphHopper Maps
+echo "Building capacitor-maplibre-navigation plugin..."
+cd capacitor-maplibre-navigation
+npm ci --ignore-scripts 
+npm run build
+cd ..
+
+echo "Building graphhopper-maps..."
 cd graphhopper-maps
-npm install
-rm dist/bundle*js
+npm ci --ignore-scripts
+rm -f dist/bundle*js
 npm run fdroid
 # we have a unique ID attached to the bundle file due to caching; remove this here
 mv dist/bundle.*.js dist/bundle.js
 cd ..
 
-npm install
+echo "Building wrapper app..."
+npm ci
+# for now avoid --ignore-scripts as the sharp module needs this and this does not work
+# npm install --ignore-scripts sharp @img/sharp-linux-x64
 
 # Create dist folder
 npm run build

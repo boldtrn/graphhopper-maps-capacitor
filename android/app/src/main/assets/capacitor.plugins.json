@@ -14,5 +14,9 @@
 	{
 		"pkg": "@capacitor/share",
 		"classpath": "com.capacitorjs.plugins.share.SharePlugin"
+	},
+	{
+		"pkg": "capacitor-maplibre-navigation",
+		"classpath": "com.graphhopper.navigationplugin.MapLibreNavigationPlugin"
 	}
 ]

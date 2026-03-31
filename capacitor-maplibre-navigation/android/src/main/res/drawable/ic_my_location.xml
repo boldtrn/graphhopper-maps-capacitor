@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Crosshair lines -->
+    <path
+        android:pathData="M12,2V6 M12,18V22 M2,12H6 M18,12H22"
+        android:strokeWidth="2"
+        android:strokeColor="#333333"
+        android:strokeLineCap="round" />
+    <!-- Center circle -->
+    <path
+        android:pathData="M12,12m-3,0a3,3 0,1,1 6,0a3,3 0,1,1 -6,0"
+        android:strokeWidth="2"
+        android:strokeColor="#333333" />
+</vector>
