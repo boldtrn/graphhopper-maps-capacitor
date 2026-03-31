@@ -21,8 +21,7 @@ cd ..
 
 echo "Building wrapper app..."
 npm ci
-# --ignore-scripts
-# add sharp module manually (native was ignored due to option)
+# for now avoid --ignore-scripts as the sharp module needs this and this does not work
 # npm install --ignore-scripts sharp @img/sharp-linux-x64
 
 # Create dist folder
