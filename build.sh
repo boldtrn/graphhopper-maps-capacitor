@@ -6,13 +6,13 @@ cp config.js graphhopper-maps/
 
 echo "Building capacitor-maplibre-navigation plugin..."
 cd capacitor-maplibre-navigation
-npm install
+npm ci --ignore-scripts
 npm run build
 cd ..
 
 echo "Building graphhopper-maps..."
 cd graphhopper-maps
-npm install
+npm ci --ignore-scripts
 rm -f dist/bundle*js
 npm run fdroid
 # we have a unique ID attached to the bundle file due to caching; remove this here
@@ -20,7 +20,7 @@ mv dist/bundle.*.js dist/bundle.js
 cd ..
 
 echo "Building wrapper app..."
-npm install
+npm ci --ignore-scripts
 
 # Create dist folder
 npm run build
