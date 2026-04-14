@@ -106,6 +106,7 @@ dist
 .tern-port
 
 /.idea
+android/.idea
 
 # joe
 *~
