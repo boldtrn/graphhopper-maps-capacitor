@@ -19,12 +19,13 @@ jobs:
       - name: Build capacitor-maplibre-navigation plugin                                                              
         working-directory: ./capacitor-maplibre-navigation                                                            
         run: |                                                                                                        
-          npm ci --ignore-scripts                                                                                                     
+          npm ci
           npm run build       
       - name: Build graphhopper-maps submodule
         working-directory: ./graphhopper-maps
         run: |
           cp ../config.js .
+          npm ci
           npm run fdroid
           mv dist/bundle.*.js dist/bundle.js
       - name: Build main project
