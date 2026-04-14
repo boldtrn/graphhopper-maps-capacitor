@@ -10,18 +10,19 @@ npm ci --ignore-scripts
 npm run build
 cd ..
 
-# for now avoid --ignore-scripts as the sharp module needs this and this does not work
-# npm install --ignore-scripts sharp @img/sharp-linux-x64
-# -> required for npm run fdroid but also for the wrapper app it seems
 
 echo "Building graphhopper-maps..."
 cd graphhopper-maps
-npm ci
+npm ci --ignore-scripts
 rm -f dist/bundle*js
 npm run fdroid
 # we have a unique ID attached to the bundle file due to caching; remove this here
 mv dist/bundle.*.js dist/bundle.js
 cd ..
+
+
+# for now avoid --ignore-scripts as the sharp module needs this and this does not work
+# npm install --ignore-scripts sharp @img/sharp-linux-x64
 
 echo "Building wrapper app..."
 npm ci
