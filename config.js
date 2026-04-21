@@ -1,7 +1,4 @@
 const config = {
-    // the url of the GraphHopper backend, either use graphhopper.com or point it to your own GH instance
-    api: 'https://graphhopper.com/api/1/',
-    // the tile layer used by default, see MapOptionsStore.ts for all options
     routingApi: 'https://graphhopper.com/api/1/',
     geocodingApi: 'https://graphhopper.com/api/1/',
     defaultTiles: 'OpenStreetMap',
