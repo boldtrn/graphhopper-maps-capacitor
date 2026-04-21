@@ -1,0 +1,9 @@
+ * new elevation widget, and show it for mobile view 
+ * new route statistics under details
+ * separate hide route button
+ * collapsing footer possible to increase map size
+ * show profile options via profile icon
+ * updates capacitor framework and other dependencies
+ * store recently searched locations and suggest them
+ * various bug fixes and translation improvements
+ * store settings
