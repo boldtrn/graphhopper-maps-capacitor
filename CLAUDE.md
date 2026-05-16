@@ -74,6 +74,16 @@ interface MapLibreNavigationPlugin {
 | Jetpack Compose BOM | 2025.01.01 | |
 | Android compileSdk / minSdk | 36 / 24 | Java/Kotlin target: 17 |
 
+### App icon & splash screen generation
+
+```bash
+npm run generate-assets   # scripts/generate-assets.mjs, uses sharp
+```
+
+Reads `resources/icon.png` (and optional `splash.png` override), writes Android `mipmap-*dpi/{ic_launcher,ic_launcher_round,ic_launcher_foreground}.png` and `drawable-{port,land}-*dpi/splash.png`. Replaces the abandoned `@capacitor/assets` (last release 2024-03-29, multiple unfixed CVEs in transitive deps).
+
+The adaptive-icon background is a `<color>` resource (`values/ic_launcher_background.xml`), not a bitmap. Night-mode splash variants are intentionally not emitted — Android falls back through the resource qualifier hierarchy to the default drawable. iOS outputs can be added to the script when iOS support lands.
+
 ### Building locally with navigation SDK changes
 
 ```bash

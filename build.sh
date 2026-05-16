@@ -33,7 +33,7 @@ npm run build
 cp config.js dist/
 
 # Create launch and splash icons
-npx capacitor-assets generate --android --iconBackgroundColor '#eeeeee' --iconBackgroundColorDark '#222222' --splashBackgroundColor '#ffffff' --splashBackgroundColorDark '#ffffff'
+npm run generate-assets
 
 npx cap sync
 
