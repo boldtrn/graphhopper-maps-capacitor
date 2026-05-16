@@ -1,5 +1,6 @@
 package com.graphhopper.navigationplugin
 
+import com.graphhopper.navigationplugin.Translation.tr
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -167,7 +168,7 @@ private fun TopInstructionBar(
         ) {
             Image(
                 painter = painterResource(turnIconRes),
-                contentDescription = "Turn direction",
+                contentDescription = tr("turn_direction", "Turn direction"),
                 modifier = Modifier.size(48.dp)
             )
             if (roundaboutExit != null) {
@@ -213,7 +214,7 @@ private fun TopInstructionBar(
             painter = painterResource(
                 if (isMuted) R.drawable.ic_volume_off else R.drawable.ic_volume_up
             ),
-            contentDescription = "Toggle voice instructions",
+            contentDescription = tr("toggle_voice_instructions", "Toggle voice instructions"),
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
@@ -238,7 +239,7 @@ private fun RecenterButton(
     ) {
         Image(
             painter = painterResource(R.drawable.ic_my_location),
-            contentDescription = "Re-center map",
+            contentDescription = tr("recenter_map", "Re-center map"),
             modifier = Modifier.size(24.dp)
         )
     }
@@ -429,7 +430,7 @@ private fun BottomInfoBar(
         ) {
             Image(
                 painter = painterResource(R.drawable.ic_close),
-                contentDescription = "Stop navigation",
+                contentDescription = tr("stop_navigation", "Stop navigation"),
                 colorFilter = ColorFilter.tint(Color(0xFF333333)),
                 modifier = Modifier.size(24.dp)
             )
@@ -458,8 +459,7 @@ private fun ThenPanel(
             .padding(horizontal = 10.dp, vertical = 6.dp)
     ) {
         BasicText(
-            // TODO I18N
-            text = "Then",
+            text = tr("then", "Then").replaceFirstChar { it.uppercase() },
             style = TextStyle(
                 fontSize = 14.sp,
                 color = Color(0xFF666666),
@@ -467,7 +467,7 @@ private fun ThenPanel(
         )
         Image(
             painter = painterResource(thenTurnIconRes),
-            contentDescription = "Then turn",
+            contentDescription = tr("then_turn", "Then turn"),
             modifier = Modifier
                 .padding(start = 6.dp)
                 .size(28.dp)

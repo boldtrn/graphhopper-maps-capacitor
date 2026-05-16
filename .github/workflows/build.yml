@@ -34,6 +34,10 @@ jobs:
           cp config.js dist/
       - name: Create launch and splash icons
         run: npm run generate-assets
+      - name: Bundle translations into navigation plugin
+        run: |
+          mkdir -p capacitor-maplibre-navigation/android/src/main/assets
+          cp graphhopper-maps/src/translation/tr.json capacitor-maplibre-navigation/android/src/main/assets/tr.json
       - name: npx cap sync
         run: npx cap sync
       - name: Set up JDK 21                                                                                           

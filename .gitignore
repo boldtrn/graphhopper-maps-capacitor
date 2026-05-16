@@ -38,6 +38,7 @@ bower_components
 build/Release
 
 capacitor-maplibre-navigation/android/build/
+capacitor-maplibre-navigation/android/src/main/assets/tr.json
 
 # Dependency directories
 node_modules/

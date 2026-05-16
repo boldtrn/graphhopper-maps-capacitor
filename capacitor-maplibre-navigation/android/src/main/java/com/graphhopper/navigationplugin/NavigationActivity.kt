@@ -117,6 +117,8 @@ class NavigationActivity : AppCompatActivity() {
     private var routeFetcher: GraphHopperRouteFetcher? = null
     private var lastRouteProgress: RouteProgress? = null
     private var arrived = false
+    // Voice instructions emitted while on the final (ARRIVE) step are
+    private var pendingArrivalAnnouncement: SpeechAnnouncement? = null
 
     // Unit settings
     private var showDistanceInMiles = false
@@ -131,6 +133,7 @@ class NavigationActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Translation.init(this, getLocale())
         MapLibre.getInstance(this)
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -336,7 +339,7 @@ class NavigationActivity : AppCompatActivity() {
             val options = MapLibreNavigationOptions(
                 defaultMilestonesEnabled = true,
                 // offRouteThresholdRadiusMeters = 50.0,
-                metersRemainingTillArrival = 10.0,
+                metersRemainingTillArrival = 15.0,
                 snapToRoute = false
                 // snapping works in general but has sometimes strange back-and-forth behavour
                 // probably related to: https://github.com/maplibre/maplibre-navigation-android/issues/67
@@ -371,7 +374,13 @@ class NavigationActivity : AppCompatActivity() {
             navigation?.addMilestoneEventListener { routeProgress, instruction, milestone ->
                 if (milestone is VoiceInstructionMilestone) {
                     val speechAnnouncement = SpeechAnnouncement.builder().voiceInstructionMilestone(milestone).build()
-                    speechPlayer?.play(speechAnnouncement)
+                    // Voice instructions are attached to the step *before* their maneuver -> upComingStep
+                    val isArrivalVoice = routeProgress.currentLegProgress.upComingStep?.maneuver?.type == StepManeuver.Type.ARRIVE
+                    if (isArrivalVoice) {
+                        pendingArrivalAnnouncement = speechAnnouncement
+                    } else {
+                        speechPlayer?.play(speechAnnouncement)
+                    }
                 }
             }
 
@@ -498,18 +507,18 @@ class NavigationActivity : AppCompatActivity() {
     private fun updateNavigationUI(location: Location, routeProgress: RouteProgress) {
         // Update current step info
         val currentLegProgress = routeProgress.currentLegProgress
-        val currentStepProgress = currentLegProgress?.currentStepProgress
-        val currentStep = currentStepProgress?.step
+        val currentStepProgress = currentLegProgress.currentStepProgress
+        val currentStep = currentStepProgress.step
 
         // The upcoming step's maneuver describes the next turn the user must make.
         // currentStep.maneuver describes how the user *entered* the current step (already done).
-        val upcomingManeuver = currentLegProgress?.upComingStep?.maneuver
+        val upcomingManeuver = currentLegProgress.upComingStep?.maneuver
 
         currentStep?.let { step ->
             val bannerInstruction = step.bannerInstructions?.firstOrNull()
             val instructionStr = bannerInstruction?.primary?.text
                 ?: upcomingManeuver?.instruction
-                ?: currentLegProgress?.upComingStep?.name ?: ""
+                ?: currentLegProgress.upComingStep?.name ?: ""
             instruction = instructionStr
 
             // Update turn icon based on upcoming maneuver
@@ -539,17 +548,16 @@ class NavigationActivity : AppCompatActivity() {
         val distanceRemainingVal = routeProgress.distanceRemaining
         val durationRemaining = routeProgress.durationRemaining
 
-        // SDK has no built-in arrival event in 5.0.0-pre12 (MapLibreNavigationOptions.metersRemainingTillArrival
-        // is declared but unused). Gate on upComingStep == null so we only trigger on the final step —
-        // otherwise a route that passes near the destination earlier could fire this prematurely.
-        val arrivalThreshold = navigation?.options?.metersRemainingTillArrival ?: 10.0
-        if (!arrived
-            && currentLegProgress?.upComingStep == null
-            && distanceRemainingVal < arrivalThreshold
-        ) {
+        // implement finish navigation behavior as SDK has no built-in arrival event yet (metersRemainingTillArrival is declared  but unused)
+        val arrivalThreshold = navigation?.options?.metersRemainingTillArrival ?: 40.0
+        if (!arrived && pendingArrivalAnnouncement != null && distanceRemainingVal < arrivalThreshold) {
             arrived = true
-            speechPlayer?.play(SpeechAnnouncement.builder().announcement("You have arrived.").build())
-            Handler(Looper.getMainLooper()).postDelayed({ finish() }, 2000)
+            // Stop the engine so it no longer emits off-route / progress events that could
+            // talk over the arrival announcement, and cancel any reroute fetch already in flight.
+            navigation?.stopNavigation()
+            routeFetcher?.cancelRouteCall()
+            pendingArrivalAnnouncement?.let { speechPlayer?.play(it) }
+            Handler(Looper.getMainLooper()).postDelayed({ finish() }, 5000)
         }
 
         remainingDistance = Converters.formatDistance(distanceRemainingVal, showDistanceInMiles, locale)
@@ -642,8 +650,7 @@ class NavigationActivity : AppCompatActivity() {
             }
 
             speechPlayer?.onOffRoute()
-            // TODO I18N
-            speechPlayer?.play(SpeechAnnouncement.builder().announcement("Rerouting").build())
+            speechPlayer?.play(SpeechAnnouncement.builder().announcement(Translation.tr("reroute", "Rerouting")).build())
 
             val newRoute = routes.first().copy(
                 routeOptions = createWtfObject()
