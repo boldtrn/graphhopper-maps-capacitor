@@ -108,3 +108,7 @@ android/.idea
 
 # joe
 *~
+
+.DS_Store
+
+.claude

@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "serve": "webpack serve --config webpack.config.js --mode development",
-    "build": "webpack --config webpack.config.js"
+    "build": "webpack --config webpack.config.js",
+    "generate-assets": "node scripts/generate-assets.mjs"
   },
   "repository": {
     "type": "git",
@@ -28,9 +29,9 @@
     "graphhopper-maps-react": "file:graphhopper-maps"
   },
   "devDependencies": {
-    "@capacitor/assets": "3.0.5",
     "@capacitor/cli": "8.3.0",
     "html-webpack-plugin": "5.6.6",
+    "sharp": "0.33.5",
     "webpack": "5.105.4",
     "webpack-cli": "5.1.4",
     "webpack-dev-server": "5.2.3"
