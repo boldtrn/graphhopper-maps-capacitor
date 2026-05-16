@@ -11,6 +11,8 @@ import android.graphics.Color
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.WindowInsetsController
 import android.view.WindowManager
@@ -114,6 +116,7 @@ class NavigationActivity : AppCompatActivity() {
     // Route fetching
     private var routeFetcher: GraphHopperRouteFetcher? = null
     private var lastRouteProgress: RouteProgress? = null
+    private var arrived = false
 
     // Unit settings
     private var showDistanceInMiles = false
@@ -328,10 +331,12 @@ class NavigationActivity : AppCompatActivity() {
             speechPlayer?.setMuted(isMuted)
 
             // Initialize navigation with default milestones enabled (for voice instructions)
+            // metersRemainingTillArrival is declared by the SDK but unused in 5.0.0-pre12;
+            // we read it ourselves in updateNavigationUI for the manual arrival check.
             val options = MapLibreNavigationOptions(
                 defaultMilestonesEnabled = true,
                 // offRouteThresholdRadiusMeters = 50.0,
-
+                metersRemainingTillArrival = 10.0,
                 snapToRoute = false
                 // snapping works in general but has sometimes strange back-and-forth behavour
                 // probably related to: https://github.com/maplibre/maplibre-navigation-android/issues/67
@@ -533,6 +538,19 @@ class NavigationActivity : AppCompatActivity() {
         val locale = getLocale()
         val distanceRemainingVal = routeProgress.distanceRemaining
         val durationRemaining = routeProgress.durationRemaining
+
+        // SDK has no built-in arrival event in 5.0.0-pre12 (MapLibreNavigationOptions.metersRemainingTillArrival
+        // is declared but unused). Gate on upComingStep == null so we only trigger on the final step —
+        // otherwise a route that passes near the destination earlier could fire this prematurely.
+        val arrivalThreshold = navigation?.options?.metersRemainingTillArrival ?: 10.0
+        if (!arrived
+            && currentLegProgress?.upComingStep == null
+            && distanceRemainingVal < arrivalThreshold
+        ) {
+            arrived = true
+            speechPlayer?.play(SpeechAnnouncement.builder().announcement("You have arrived.").build())
+            Handler(Looper.getMainLooper()).postDelayed({ finish() }, 2000)
+        }
 
         remainingDistance = Converters.formatDistance(distanceRemainingVal, showDistanceInMiles, locale)
         remainingTime = Converters.formatDuration(durationRemaining, locale)
