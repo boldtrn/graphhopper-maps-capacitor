@@ -37,10 +37,15 @@ import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.layers.LineLayer
+import org.maplibre.android.style.layers.Property
+import org.maplibre.android.style.layers.PropertyFactory.iconAllowOverlap
+import org.maplibre.android.style.layers.PropertyFactory.iconAnchor
+import org.maplibre.android.style.layers.PropertyFactory.iconImage
 import org.maplibre.android.style.layers.PropertyFactory.lineColor
 import org.maplibre.android.style.layers.PropertyFactory.lineCap
 import org.maplibre.android.style.layers.PropertyFactory.lineJoin
 import org.maplibre.android.style.layers.PropertyFactory.lineWidth
+import org.maplibre.android.style.layers.SymbolLayer
 import org.maplibre.android.style.sources.GeoJsonSource
 import org.maplibre.geojson.common.toJvm
 import org.maplibre.geojson.model.LineString
@@ -72,6 +77,12 @@ class NavigationActivity : AppCompatActivity() {
         private const val TAG = "NavigationActivity"
         private const val ROUTE_SOURCE_ID = "route-source"
         private const val ROUTE_LAYER_ID = "route-layer"
+        private const val DEST_SOURCE_ID = "destination-marker-source"
+        private const val DEST_LAYER_ID = "destination-marker-layer"
+        private const val DEST_ICON_ID = "destination-marker-icon"
+        private const val VIA_SOURCE_ID = "via-marker-source"
+        private const val VIA_LAYER_ID = "via-marker-layer"
+        private const val VIA_ICON_ID = "via-marker-icon"
         private const val DEFAULT_STYLE_URL =
             "https://tiles.mapilion.com/assets/osm-bright/style.json?key=b582abd4-d55d-4cb1-8f34-f4254cd52aa7"
         private const val LOCATION_PERMISSION_REQUEST = 1001
@@ -399,6 +410,9 @@ class NavigationActivity : AppCompatActivity() {
             // Initialize maneuver arrow (above route layer)
             mapRouteArrow = MapRouteArrow(mapView, mapLibreMap!!, R.style.NavigationMapRoute, ROUTE_LAYER_ID)
 
+            // Waypoint markers go above arrows; the puck added next will end up on top.
+            drawWaypointMarkers(style)
+
             // Setup location component for navigation puck
             setupLocationComponent(style)
 
@@ -504,6 +518,47 @@ class NavigationActivity : AppCompatActivity() {
         }
     }
 
+    // Permanent markers from the original request — red pin at destination, blue pins at any
+    // intermediate VIA points. The request's "points" array is [origin, ..., destination].
+    private fun drawWaypointMarkers(style: Style) {
+        style.removeLayer(DEST_LAYER_ID)
+        style.removeSource(DEST_SOURCE_ID)
+        style.removeLayer(VIA_LAYER_ID)
+        style.removeSource(VIA_SOURCE_ID)
+
+        val points = requestJson?.optJSONArray("points") ?: return
+        if (points.length() < 2) return
+
+        fun ensureImage(id: String, drawableRes: Int) {
+            if (style.getImage(id) == null) {
+                ContextCompat.getDrawable(this, drawableRes)?.let { style.addImage(id, it) }
+            }
+        }
+        fun pointAt(i: Int) = points.getJSONArray(i).let {
+            org.maplibre.geojson.Point.fromLngLat(it.getDouble(0), it.getDouble(1))
+        }
+        fun markerLayer(id: String, sourceId: String, iconId: String) = SymbolLayer(id, sourceId).apply {
+            setProperties(
+                iconImage(iconId),
+                iconAllowOverlap(true),
+                iconAnchor(Property.ICON_ANCHOR_BOTTOM),
+            )
+        }
+
+        ensureImage(DEST_ICON_ID, R.drawable.ic_destination_red)
+        style.addSource(GeoJsonSource(DEST_SOURCE_ID, pointAt(points.length() - 1)))
+        style.addLayer(markerLayer(DEST_LAYER_ID, DEST_SOURCE_ID, DEST_ICON_ID))
+
+        if (points.length() > 2) {
+            ensureImage(VIA_ICON_ID, R.drawable.ic_destination_blue)
+            val viaFeatures = (1 until points.length() - 1).map {
+                org.maplibre.geojson.Feature.fromGeometry(pointAt(it))
+            }
+            style.addSource(GeoJsonSource(VIA_SOURCE_ID, org.maplibre.geojson.FeatureCollection.fromFeatures(viaFeatures)))
+            style.addLayer(markerLayer(VIA_LAYER_ID, VIA_SOURCE_ID, VIA_ICON_ID))
+        }
+    }
+
     private fun updateNavigationUI(location: Location, routeProgress: RouteProgress) {
         // Update current step info
         val currentLegProgress = routeProgress.currentLegProgress
@@ -525,7 +580,8 @@ class NavigationActivity : AppCompatActivity() {
             val type = bannerInstruction?.primary?.type ?: upcomingManeuver?.type
             val modifier = bannerInstruction?.primary?.modifier ?: upcomingManeuver?.modifier
             val degrees = bannerInstruction?.primary?.degrees
-            turnIconRes = getManeuverIcon(type, modifier, degrees)
+            val isFinalLeg = routeProgress.legIndex >= (currentRoute?.legs?.size ?: 1) - 1
+            turnIconRes = getManeuverIcon(type, modifier, degrees, isFinalLeg)
 
             // Show exit number for roundabouts
             roundaboutExit = if (isRoundaboutType(type)) upcomingManeuver?.exit else null
@@ -537,7 +593,7 @@ class NavigationActivity : AppCompatActivity() {
             // "Then" turn — show when the next maneuver is close and there's a sub instruction
             val sub = bannerInstruction?.sub
             thenTurnIconRes = if (sub != null && distanceToNextManeuver < 200) {
-                getManeuverIcon(sub.type, sub.modifier, sub.degrees)
+                getManeuverIcon(sub.type, sub.modifier, sub.degrees, isFinalLeg)
             } else {
                 null
             }
@@ -610,10 +666,12 @@ class NavigationActivity : AppCompatActivity() {
     private fun getManeuverIcon(
         type: StepManeuver.Type?,
         modifier: ManeuverModifier.Type?,
-        degrees: Double? = null
+        degrees: Double? = null,
+        isFinalLeg: Boolean = true,
     ): Int {
         return when {
-            type == StepManeuver.Type.ARRIVE -> R.drawable.ic_destination
+            type == StepManeuver.Type.ARRIVE ->
+                if (isFinalLeg) R.drawable.ic_destination_red else R.drawable.ic_destination_blue
             type == StepManeuver.Type.DEPART -> R.drawable.ic_straight
             isRoundaboutType(type) -> {
                 // Use degrees (angle through roundabout) to determine exit direction

@@ -169,7 +169,7 @@ private fun TopInstructionBar(
             Image(
                 painter = painterResource(turnIconRes),
                 contentDescription = tr("turn_direction", "Turn direction"),
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(48.dp),
             )
             if (roundaboutExit != null) {
                 BasicText(

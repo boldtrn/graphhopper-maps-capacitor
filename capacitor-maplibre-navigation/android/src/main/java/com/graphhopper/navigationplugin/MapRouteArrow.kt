@@ -39,6 +39,7 @@ import org.maplibre.android.style.sources.GeoJsonSource
 import org.maplibre.geojson.common.toJvm
 import org.maplibre.geojson.model.LineString
 import org.maplibre.geojson.model.Point
+import org.maplibre.navigation.core.models.StepManeuver
 import org.maplibre.navigation.core.routeprogress.RouteProgress
 import org.maplibre.navigation.core.utils.Constants
 import org.maplibre.turf.TurfConstants
@@ -233,6 +234,11 @@ class MapRouteArrow(
      * Updates the arrow to show the upcoming maneuver based on route progress.
      */
     fun addUpcomingManeuverArrow(routeProgress: RouteProgress) {
+        // Suppress arrow when the upcoming maneuver is an arrival (destination or
+        // intermediate waypoint) — those are shown as static markers, not arrows.
+        if (routeProgress.currentLegProgress?.upComingStep?.maneuver?.type == StepManeuver.Type.ARRIVE) {
+            return
+        }
         val currentGeometry = routeProgress.currentLegProgress?.currentStepProgress?.step?.geometry ?: return
         val upcomingGeometry = routeProgress.currentLegProgress?.upComingStep?.geometry ?: return
 
