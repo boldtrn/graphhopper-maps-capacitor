@@ -1,13 +1,12 @@
 # Graphhopper Maps with GPS Navigation
 
-This Android app is currently a [capacitor](https://capacitorjs.com/)-wrapper for the `navi` branch of [GraphHopper Maps](https://github.com/graphhopper/graphhopper-maps). There are many known limitations for the turn-by-turn navigation feature (as it happens in the browser) and if it is not possible to fix them in the browser we can fix them here.
+This Android app is a [capacitor](https://capacitorjs.com/)-wrapper for the `native-navigation` branch of [GraphHopper Maps](https://github.com/graphhopper/graphhopper-maps). Since version 3.x native navigation is used instead of in-browser navigation.
 
 ## Install
 
 We provide automatically generated build artifacts for every commit. You can find them in the [actions tab](https://github.com/boldtrn/graphhopper-maps-capacitor/actions).
 
 Otherwise, you can download stable versions on F-Droid:
-
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
      alt="Get it on F-Droid"
@@ -31,7 +30,7 @@ Make sure you have all the [requirements for Capacitor](https://capacitorjs.com/
 Note: you can either run the app straight away or open it in Android Studio. You can generate an APK in Android Studio,
 or debug the app etc.
 
-#### Open Android App
+#### Open Android App on Device
 ``` bash
 npx cap run android
 ```
