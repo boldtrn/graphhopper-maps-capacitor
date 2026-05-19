@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- White circle background with shadow -->
+    <path
+        android:pathData="M12,12m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0"
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#CCCCCC"
+        android:strokeWidth="0.5"/>
+    <!-- North pointer (red) -->
+    <path
+        android:pathData="M12,4L14.5,12L12,11L9.5,12Z"
+        android:fillColor="#E53935"/>
+    <!-- South pointer (gray) -->
+    <path
+        android:pathData="M12,20L9.5,12L12,13L14.5,12Z"
+        android:fillColor="#757575"/>
+</vector>

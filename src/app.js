@@ -3,6 +3,7 @@ import { Filesystem } from '@capacitor/filesystem';
 import { TextToSpeech } from '@capacitor-community/text-to-speech';
 import { Clipboard } from '@capacitor/clipboard';
 import { Share } from '@capacitor/share';
+import { MapLibreNavigation } from 'capacitor-maplibre-navigation';
 
 console.info(`GH Maps`, 'Loaded App.js');
 
@@ -70,6 +71,31 @@ if (Capacitor.isNativePlatform()) {
           console.error('Error writing file:', error);
         }
     }
+
+    // Native MapLibre navigation implementation
+    let onCloseCallback = null;
+
+    MapLibreNavigation.addListener('navigationClosed', () => {
+        console.info('GH Maps Navigation', 'Navigation closed by user');
+        if (onCloseCallback) {
+            onCloseCallback();
+            onCloseCallback = null;
+        }
+    });
+
+    window.ghNativeNavigation = {
+        async start(navigateUrl, requestBody, onClose, showDistanceInMiles = false) {
+            onCloseCallback = onClose;
+            console.info('GH Maps Navigation', 'Starting navigation');
+            MapLibreNavigation.startNavigation({ navigateUrl, requestBody, showDistanceInMiles })
+                .catch((error) => console.error('GH Maps Navigation', 'Failed to start:', error));
+        },
+        stop() {
+            console.info('GH Maps Navigation', 'Stopping');
+            MapLibreNavigation.stopNavigation()
+                .catch((error) => console.error('GH Maps Navigation', 'Failed to stop:', error));
+        }
+    };
 }
 
 // We use require to make sure that gh is loaded after we init our script, import does not guarantee order

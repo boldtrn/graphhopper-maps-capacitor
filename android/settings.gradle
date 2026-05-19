@@ -2,4 +2,8 @@ include ':app'
 include ':capacitor-cordova-android-plugins'
 project(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')
 
+// Local MapLibre Navigation plugin
+include ':capacitor-maplibre-navigation'
+project(':capacitor-maplibre-navigation').projectDir = new File('../capacitor-maplibre-navigation/android')
+
 apply from: 'capacitor.settings.gradle'

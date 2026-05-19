@@ -1,0 +1,39 @@
+{
+  "name": "capacitor-maplibre-navigation",
+  "version": "0.1.0",
+  "description": "Capacitor plugin for MapLibre native navigation view",
+  "main": "dist/plugin.cjs.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "unpkg": "dist/plugin.js",
+  "files": [
+    "android/src/main/",
+    "android/build.gradle",
+    "dist/"
+  ],
+  "author": "GraphHopper",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/graphhopper/capacitor-maplibre-navigation.git"
+  },
+  "scripts": {
+    "build": "npm run clean && tsc && rollup -c rollup.config.mjs",
+    "clean": "rimraf ./dist",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "rimraf": "^5.0.5",
+    "rollup": "^4.9.6",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "@capacitor/core": "^8.0.0"
+  },
+  "capacitor": {
+    "android": {
+      "src": "android"
+    }
+  }
+}

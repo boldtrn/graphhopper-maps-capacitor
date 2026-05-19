@@ -37,6 +37,9 @@ bower_components
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 build/Release
 
+capacitor-maplibre-navigation/android/build/
+capacitor-maplibre-navigation/android/src/main/assets/tr.json
+
 # Dependency directories
 node_modules/
 jspm_packages/
