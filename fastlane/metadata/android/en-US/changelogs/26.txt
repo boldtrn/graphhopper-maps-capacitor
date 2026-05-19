@@ -1,0 +1,1 @@
+turn-by-turn navigation now based on Maplibre Navigation SDK (KMP)
