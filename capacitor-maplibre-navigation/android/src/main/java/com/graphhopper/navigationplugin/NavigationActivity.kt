@@ -9,11 +9,13 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
+import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import android.view.WindowInsetsController
 import android.view.WindowManager
 import androidx.activity.compose.setContent
@@ -267,8 +269,26 @@ class NavigationActivity : AppCompatActivity() {
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 LOCATION_PERMISSION_REQUEST
             )
+        } else if (!isLocationProviderEnabled()) {
+            failAndClose(Translation.tr("waiting_for_gps", "Please enable GPS / Location Services"))
         } else {
             fetchInitialRoute(style)
+        }
+    }
+
+    private fun isLocationProviderEnabled(): Boolean {
+        val lm = getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return false
+        return lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
+    }
+
+    /** Show an explanatory message and close the navigation screen. Safe to call from any thread. */
+    private fun failAndClose(message: String) {
+        Log.e(TAG, "Closing navigation: $message")
+        runOnUiThread {
+            if (!isFinishing && !isDestroyed) {
+                Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
+                finish()
+            }
         }
     }
 
@@ -280,10 +300,13 @@ class NavigationActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == LOCATION_PERMISSION_REQUEST) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                mapLibreMap?.style?.let { fetchInitialRoute(it) }
+                if (!isLocationProviderEnabled()) {
+                    failAndClose(Translation.tr("waiting_for_gps", "Please enable GPS / Location Services"))
+                } else {
+                    mapLibreMap?.style?.let { fetchInitialRoute(it) }
+                }
             } else {
-                Log.e(TAG, "Location permission denied")
-                finish()
+                failAndClose(Translation.tr("location_permission_denied", "Location permission is required for navigation"))
             }
         }
     }
@@ -311,7 +334,7 @@ class NavigationActivity : AppCompatActivity() {
                 },
                 onError = { e ->
                     Log.e(TAG, "Initial route fetch failed: ${e.message}", e)
-                    runOnUiThread { finish() }
+                    failAndClose(Translation.tr("route_fetch_failed", "Could not fetch route: ${e.message}"))
                 }
             )
         }
@@ -323,8 +346,7 @@ class NavigationActivity : AppCompatActivity() {
             val routes = directionsResponse.routes
 
             if (routes.isEmpty()) {
-                Log.e(TAG, "No routes in response")
-                finish()
+                failAndClose(Translation.tr("locations_not_found", "No route found"))
                 return
             }
             val route = directionsResponse.routes.first()
@@ -367,17 +389,21 @@ class NavigationActivity : AppCompatActivity() {
                 lastRouteProgress = routeProgress
 
                 runOnUiThread {
-                    val androidLocation = location.toAndroidLocation()
-                    updateNavigationUI(androidLocation, routeProgress)
+                    try {
+                        val androidLocation = location.toAndroidLocation()
+                        updateNavigationUI(androidLocation, routeProgress)
 
-                    // Skip location/camera updates (rotation) when stationary
-                    if (androidLocation.speed > 0f) {
-                        mapLibreMap?.locationComponent?.forceLocationUpdate(androidLocation)
-                        updateCameraPosition(androidLocation)
+                        // Skip location/camera updates (rotation) when stationary
+                        if (androidLocation.speed > 0f) {
+                            mapLibreMap?.locationComponent?.forceLocationUpdate(androidLocation)
+                            updateCameraPosition(androidLocation)
+                        }
+
+                        // Update maneuver arrow
+                        mapRouteArrow?.addUpcomingManeuverArrow(routeProgress)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error in progress UI update: ${e.message}", e)
                     }
-
-                    // Update maneuver arrow
-                    mapRouteArrow?.addUpcomingManeuverArrow(routeProgress)
                 }
             }
 
@@ -421,7 +447,7 @@ class NavigationActivity : AppCompatActivity() {
 
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize navigation: ${e.message}", e)
-            finish()
+            failAndClose(Translation.tr("navigation_start_failed", "Could not start navigation: ${e.message}"))
         }
     }
 
@@ -451,25 +477,30 @@ class NavigationActivity : AppCompatActivity() {
             return
         }
 
-        mapLibreMap?.locationComponent?.apply {
-            activateLocationComponent(
-                LocationComponentActivationOptions.builder(this@NavigationActivity, style)
-                    .useDefaultLocationEngine(!FAKE_GPS) // Use real GPS engine when not faking
-                    .build()
-            )
-            isLocationComponentEnabled = true
-            cameraMode = CameraMode.TRACKING_GPS
-            renderMode = RenderMode.GPS
+        try {
+            mapLibreMap?.locationComponent?.apply {
+                activateLocationComponent(
+                    LocationComponentActivationOptions.builder(this@NavigationActivity, style)
+                        .useDefaultLocationEngine(!FAKE_GPS) // Use real GPS engine when not faking
+                        .build()
+                )
+                isLocationComponentEnabled = true
+                cameraMode = CameraMode.TRACKING_GPS
+                renderMode = RenderMode.GPS
 
-            addOnCameraTrackingChangedListener(object : OnCameraTrackingChangedListener {
-                override fun onCameraTrackingChanged(currentMode: Int) {
-                    showRecenter = currentMode == CameraMode.NONE
-                }
+                addOnCameraTrackingChangedListener(object : OnCameraTrackingChangedListener {
+                    override fun onCameraTrackingChanged(currentMode: Int) {
+                        showRecenter = currentMode == CameraMode.NONE
+                    }
 
-                override fun onCameraTrackingDismissed() {
-                    showRecenter = true
-                }
-            })
+                    override fun onCameraTrackingDismissed() {
+                        showRecenter = true
+                    }
+                })
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to setup location component: ${e.message}", e)
+            failAndClose(Translation.tr("waiting_for_gps", "Please enable GPS / Location Services"))
         }
     }
 
