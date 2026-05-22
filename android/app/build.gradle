@@ -1,4 +1,70 @@
+import com.android.build.api.artifact.ScopedArtifact
+import com.android.build.api.variant.ScopedArtifacts
+import org.gradle.api.DefaultTask
+import org.gradle.api.file.Directory
+import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskAction
+
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
+
 apply plugin: 'com.android.application'
+
+// Strip GoogleLocationEngine* classes (GMS refs) from merged classes before dexing so
+// F-Droid's scanner accepts the APK. Remove when maplibre-navigation-android drops
+// GoogleLocationEngine (cf. maplibre/maplibre-native#379 — same FLOSS change in MapLibre Native 10).
+abstract class StripGoogleLocationEngineTask extends DefaultTask {
+    @InputFiles abstract ListProperty<RegularFile> getAllJars()
+    @InputFiles abstract ListProperty<Directory> getAllDirectories()
+    @OutputFile abstract RegularFileProperty getOutput()
+
+    private static final String PREFIX = 'org/maplibre/navigation/core/location/engine/GoogleLocationEngine'
+
+    @TaskAction
+    void run() {
+        def out = output.get().asFile
+        out.parentFile.mkdirs()
+        def seen = new HashSet<String>()
+        new ZipOutputStream(new FileOutputStream(out)).withCloseable { zos ->
+            allJars.get().each { jar ->
+                new ZipFile(jar.asFile).withCloseable { zip ->
+                    for (def es = zip.entries(); es.hasMoreElements(); ) {
+                        def e = es.nextElement()
+                        if (e.directory || e.name.startsWith(PREFIX) || !seen.add(e.name)) continue
+                        zos.putNextEntry(new ZipEntry(e.name))
+                        zip.getInputStream(e).withCloseable { it.transferTo(zos) }
+                        zos.closeEntry()
+                    }
+                }
+            }
+            allDirectories.get().each { dir ->
+                def root = dir.asFile.toPath()
+                dir.asFile.eachFileRecurse { f ->
+                    if (!f.isFile()) return
+                    def name = root.relativize(f.toPath()).toString().replace('\\', '/')
+                    if (name.startsWith(PREFIX) || !seen.add(name)) return
+                    zos.putNextEntry(new ZipEntry(name))
+                    f.withInputStream { it.transferTo(zos) }
+                    zos.closeEntry()
+                }
+            }
+        }
+    }
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        def t = tasks.register("strip${variant.name.capitalize()}GoogleLocationEngine", StripGoogleLocationEngineTask)
+        variant.artifacts.forScope(ScopedArtifacts.Scope.ALL)
+            .use(t)
+            .toTransform(ScopedArtifact.CLASSES.INSTANCE, { it.allJars }, { it.allDirectories }, { it.output })
+    }
+}
 
 android {
 

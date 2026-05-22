@@ -53,7 +53,7 @@ import org.maplibre.geojson.common.toJvm
 import org.maplibre.geojson.model.LineString
 import org.maplibre.geojson.model.Point
 import org.maplibre.navigation.core.location.engine.LocationEngine
-import org.maplibre.navigation.core.location.engine.LocationEngineProvider
+import org.maplibre.navigation.core.location.engine.MapLibreLocationEngine
 import org.maplibre.navigation.core.location.replay.ReplayRouteLocationEngine
 import org.maplibre.navigation.core.utils.Constants
 import org.maplibre.navigation.core.location.toAndroidLocation
@@ -354,11 +354,11 @@ class NavigationActivity : AppCompatActivity() {
                 routeOptions = createWtfObject()
             )
 
-            // Initialize location engine based on fakeGps setting
+            // MapLibreLocationEngine (not LocationEngineProvider.getBestLocationEngine) so the build stays GMS-free for F-Droid.
             val locationEngine: LocationEngine = if (FAKE_GPS) {
                 ReplayRouteLocationEngine().also { it.assign(currentRoute!!) }
             } else {
-                LocationEngineProvider.getBestLocationEngine(applicationContext)
+                MapLibreLocationEngine(applicationContext, Looper.getMainLooper())
             }
 
             // Initialize speech player using route's voice language or device locale
