@@ -23,7 +23,7 @@ git clone --recursive https://github.com/boldtrn/graphhopper-maps-capacitor.git
 Make sure you have all the [requirements for Capacitor](https://capacitorjs.com/docs/getting-started/environment-setup).
 
 ``` bash
-./build.sh
+./build_local.sh
 ```
 
 ### Run the project

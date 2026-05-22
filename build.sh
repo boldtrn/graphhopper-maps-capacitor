@@ -40,14 +40,3 @@ mkdir -p capacitor-maplibre-navigation/android/src/main/assets
 cp graphhopper-maps/src/translation/tr.json capacitor-maplibre-navigation/android/src/main/assets/tr.json
 
 npx cap sync
-
-# Build Android
-cd android
-./gradlew assembleDebug
-cd ..
-
-# Open Android App
-# npx cap run android
-
-# Open in Android Studio
-# npx cap open android
