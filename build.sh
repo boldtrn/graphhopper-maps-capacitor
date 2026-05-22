@@ -32,9 +32,6 @@ npm run build
 # config.js is no longer in bundle.js
 cp config.js dist/
 
-# Create launch and splash icons
-npm run generate-assets
-
 # Bundle web translations into the navigation plugin so native UI can reuse them
 mkdir -p capacitor-maplibre-navigation/android/src/main/assets
 cp graphhopper-maps/src/translation/tr.json capacitor-maplibre-navigation/android/src/main/assets/tr.json
