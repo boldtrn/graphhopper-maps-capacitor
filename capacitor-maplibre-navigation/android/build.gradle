@@ -61,17 +61,11 @@ dependencies {
         exclude group: 'org.maplibre.gl', module: 'android-sdk-turf'
     }
 
-    // Navigation SDK (KMP version) - provides geojson-jvm and turf-jvm 7.0.0-pre0
-    implementation 'org.maplibre.navigation:navigation-core:5.0.0-pre12'
-    implementation 'org.maplibre.navigation:navigation-ui-android:5.0.0-pre12'
-
-    // implementation 'org.maplibre.navigation:navigation-core:5.1.0-SNAPSHOT'
-    // implementation 'org.maplibre.navigation:navigation-ui-android:5.1.0-SNAPSHOT'
-
-    // build locally:
-    // VERSION=5.1.0-SNAPSHOT ./gradlew :maplibre-navigation-core:publishToMavenLocal :libandroid-navigation-ui:publishToMavenLocal
-    // then use here and add mavenLocal() in android/build.gradle
-    // allprojects { repositories { ...HERE... } }
+    // Navigation SDK (KMP version) - provides geojson-jvm and turf-jvm 7.0.0-pre0.
+    // From 5.0.0-pre13 onward the GoogleLocationEngine lives in a separate optional
+    // artifact, so the main artifact is GMS-free (F-Droid compliant).
+    implementation 'org.maplibre.navigation:navigation-core:5.0.0-pre13'
+    implementation 'org.maplibre.navigation:navigation-ui-android:5.0.0-pre13'
 
     testImplementation "junit:junit:$junitVersion"
     testImplementation "org.json:json:20231013"
