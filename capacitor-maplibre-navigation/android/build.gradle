@@ -55,17 +55,12 @@ dependencies {
     implementation 'androidx.compose.foundation:foundation'
     implementation 'androidx.activity:activity-compose:1.10.0'
 
-    // MapLibre GL Native (exclude old geojson/turf, Navigation SDK provides newer versions)
-    implementation('org.maplibre.gl:android-sdk:12.3.0') {
-        exclude group: 'org.maplibre.gl', module: 'android-sdk-geojson'
-        exclude group: 'org.maplibre.gl', module: 'android-sdk-turf'
-    }
+    implementation 'org.maplibre.gl:android-sdk:12.3.0'
 
-    // Navigation SDK (KMP version) - provides geojson-jvm and turf-jvm 7.0.0-pre0.
-    // From 5.0.0-pre13 onward the GoogleLocationEngine lives in a separate optional
-    // artifact, so the main artifact is GMS-free (F-Droid compliant).
-    implementation 'org.maplibre.navigation:navigation-core:5.0.0-pre13'
-    implementation 'org.maplibre.navigation:navigation-ui-android:5.0.0-pre13'
+    // Navigation SDK (KMP version). From 5.0.0-pre14 the geometry stack is Spatial-K
+    // (org.maplibre.spatialk.*), a different package than the renderer's geojson/turf,
+    implementation 'org.maplibre.navigation:navigation-core:5.0.0-pre14'
+    implementation 'org.maplibre.navigation:navigation-ui-android:5.0.0-pre14'
 
     testImplementation "junit:junit:$junitVersion"
     testImplementation "org.json:json:20231013"

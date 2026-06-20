@@ -36,15 +36,20 @@ import org.maplibre.android.style.layers.Property
 import org.maplibre.android.style.layers.PropertyFactory.*
 import org.maplibre.android.style.layers.SymbolLayer
 import org.maplibre.android.style.sources.GeoJsonSource
-import org.maplibre.geojson.common.toJvm
-import org.maplibre.geojson.model.LineString
-import org.maplibre.geojson.model.Point
 import org.maplibre.navigation.core.models.StepManeuver
 import org.maplibre.navigation.core.routeprogress.RouteProgress
 import org.maplibre.navigation.core.utils.Constants
-import org.maplibre.turf.TurfConstants
-import org.maplibre.turf.TurfMeasurement
-import org.maplibre.turf.TurfMisc
+import org.maplibre.spatialk.geojson.LineString
+import org.maplibre.spatialk.geojson.Position
+import org.maplibre.spatialk.geojson.toJson
+import org.maplibre.spatialk.polyline.PolylineEncoding
+import org.maplibre.spatialk.turf.measurement.bearingTo
+import org.maplibre.spatialk.turf.measurement.length
+import org.maplibre.spatialk.units.Bearing
+import org.maplibre.spatialk.units.extensions.inDegrees
+import org.maplibre.spatialk.turf.misc.slice
+import org.maplibre.spatialk.units.extensions.inMeters
+import org.maplibre.spatialk.units.extensions.meters
 
 /**
  * Draws an arrow on the map indicating the upcoming maneuver direction.
@@ -242,54 +247,55 @@ class MapRouteArrow(
         val currentGeometry = routeProgress.currentLegProgress?.currentStepProgress?.step?.geometry ?: return
         val upcomingGeometry = routeProgress.currentLegProgress?.upComingStep?.geometry ?: return
 
-        // Decode polylines using LineString constructor
-        val currentLine = LineString(currentGeometry, Constants.PRECISION_6)
-        val upcomingLine = LineString(upcomingGeometry, Constants.PRECISION_6)
-
-        if (currentLine.coordinates.size < 2 || upcomingLine.coordinates.size < 2) {
+        // Decode polylines into Spatial-K geometry
+        val currentCoords = PolylineEncoding.decode(currentGeometry, Constants.PRECISION_6)
+        val upcomingCoords = PolylineEncoding.decode(upcomingGeometry, Constants.PRECISION_6)
+        if (currentCoords.size < 2 || upcomingCoords.size < 2) {
             return
         }
-
-        // Convert to JVM types for Turf operations
-        val currentLineJvm = currentLine.toJvm() as org.maplibre.geojson.LineString
-        val upcomingLineJvm = upcomingLine.toJvm() as org.maplibre.geojson.LineString
+        val currentLine = LineString(currentCoords)
+        val upcomingLine = LineString(upcomingCoords)
 
         // Slice from end of current step
-        val currentLength = TurfMeasurement.length(currentLineJvm, TurfConstants.UNIT_METERS)
+        val currentLength = currentLine.length().inMeters
         val sliceStart = maxOf(0.0, currentLength - ARROW_SLICE_DISTANCE)
-        val slicedCurrentJvm = TurfMisc.lineSliceAlong(currentLineJvm, sliceStart, currentLength, TurfConstants.UNIT_METERS)
+        val slicedCurrent = currentLine.slice(sliceStart.meters, currentLength.meters)
 
         // Slice from start of upcoming step
-        val slicedUpcomingJvm = TurfMisc.lineSliceAlong(upcomingLineJvm, 0.0, ARROW_SLICE_DISTANCE, TurfConstants.UNIT_METERS)
+        val slicedUpcoming = upcomingLine.slice(0.0.meters, ARROW_SLICE_DISTANCE.meters)
 
         // Combine points for arrow
-        val arrowPoints = mutableListOf<org.maplibre.geojson.Point>()
-        arrowPoints.addAll(slicedCurrentJvm.coordinates())
+        val arrowPoints = mutableListOf<Position>()
+        arrowPoints.addAll(slicedCurrent.coordinates)
         // Skip first point of upcoming to avoid duplicate at junction
-        val upcomingCoords = slicedUpcomingJvm.coordinates()
-        if (upcomingCoords.size > 1) {
-            arrowPoints.addAll(upcomingCoords.drop(1))
+        val slicedUpcomingCoords = slicedUpcoming.coordinates
+        if (slicedUpcomingCoords.size > 1) {
+            arrowPoints.addAll(slicedUpcomingCoords.drop(1))
         }
 
         if (arrowPoints.size < 2) {
             return
         }
 
-        // Update arrow shaft (head icon draws on top, so underlap is hidden)
-        val arrowLineString = org.maplibre.geojson.LineString.fromLngLats(arrowPoints)
-        arrowShaftGeoJsonSource?.setGeoJson(arrowLineString)
+        // Update arrow shaft (head icon draws on top, so underlap is hidden).
+        // The renderer (GeoJsonSource) consumes GeoJSON strings produced by Spatial-K.
+        val arrowLineString = LineString(arrowPoints)
+        arrowShaftGeoJsonSource?.setGeoJson(arrowLineString.toJson())
 
-        // Update arrow head with bearing
+        // Update arrow head with bearing, taken from the last point distinct from the
+        // tip so the heading is well-defined.
         val lastPoint = arrowPoints.last()
-        val secondToLast = arrowPoints[arrowPoints.size - 2]
-        val bearingValue = TurfMeasurement.bearing(secondToLast, lastPoint)
+        val refPoint = arrowPoints.lastOrNull {
+            it.longitude != lastPoint.longitude || it.latitude != lastPoint.latitude
+        } ?: lastPoint
+        val bearingValue = (refPoint.bearingTo(lastPoint) - Bearing.North).inDegrees
 
         val geoJson = """
             {
                 "type": "Feature",
                 "geometry": {
                     "type": "Point",
-                    "coordinates": [${lastPoint.longitude()}, ${lastPoint.latitude()}]
+                    "coordinates": [${lastPoint.longitude}, ${lastPoint.latitude}]
                 },
                 "properties": {
                     "bearing": $bearingValue

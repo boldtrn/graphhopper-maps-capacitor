@@ -49,9 +49,10 @@ import org.maplibre.android.style.layers.PropertyFactory.lineJoin
 import org.maplibre.android.style.layers.PropertyFactory.lineWidth
 import org.maplibre.android.style.layers.SymbolLayer
 import org.maplibre.android.style.sources.GeoJsonSource
-import org.maplibre.geojson.common.toJvm
-import org.maplibre.geojson.model.LineString
-import org.maplibre.geojson.model.Point
+import org.maplibre.spatialk.geojson.LineString
+import org.maplibre.spatialk.geojson.Position
+import org.maplibre.spatialk.geojson.toJson
+import org.maplibre.spatialk.polyline.PolylineEncoding
 import org.maplibre.navigation.core.location.engine.LocationEngine
 import org.maplibre.navigation.core.location.engine.MapLibreLocationEngine
 import org.maplibre.navigation.core.location.replay.ReplayRouteLocationEngine
@@ -464,7 +465,7 @@ class NavigationActivity : AppCompatActivity() {
             voiceInstructions = true,
             bannerInstructions = true,
             language = "en-US",
-            coordinates = listOf(Point(9.6935451, 52.3758408), Point(9.9769191, 53.5426183)),
+            coordinates = listOf(Position(9.6935451, 52.3758408), Position(9.9769191, 53.5426183)),
             requestUuid = "0000-0000-0000-0000"
         )
     }
@@ -518,12 +519,13 @@ class NavigationActivity : AppCompatActivity() {
         style.removeLayer(ROUTE_LAYER_ID)
         style.removeSource(ROUTE_SOURCE_ID)
 
-        // Parse geometry from route
+        // Parse geometry from route (decode polyline into Spatial-K geometry)
         val geometry = route.geometry ?: return
-        val lineString = LineString(geometry, Constants.PRECISION_6)
+        val lineString = LineString(PolylineEncoding.decode(geometry, Constants.PRECISION_6))
 
-        // Add source and layer (below location puck)
-        style.addSource(GeoJsonSource(ROUTE_SOURCE_ID, lineString.toJvm()))
+        // Add source and layer (below location puck). The renderer consumes the
+        // GeoJSON string produced by Spatial-K's toJson().
+        style.addSource(GeoJsonSource(ROUTE_SOURCE_ID, lineString.toJson()))
         val routeLayer = LineLayer(ROUTE_LAYER_ID, ROUTE_SOURCE_ID).apply {
             setProperties(
                 lineColor(Color.parseColor("#B34A90D9")),
