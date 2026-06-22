@@ -103,6 +103,12 @@ VERSION=5.1.0-SNAPSHOT ./gradlew :maplibre-navigation-core:publishToMavenLocal :
   - `VoiceInstructionMilestone`
 - `snapToRoute` is disabled for now (to fix it see https://github.com/maplibre/maplibre-navigation-android/issues/67)
 
+## APK size & F-Droid ABI splits
+
+MapLibre GL Native ships a ~10 MB `.so` per architecture, so `android/app/build.gradle` ABI-splits into one APK per arch (`arm64-v8a` ~24 MB, `armeabi-v7a` ~20 MB), drops `x86`/`x86_64`, and gives each split a distinct versionCode (`variant.versionCode * 10 + abiOffset`, `{armeabi-v7a:1, arm64-v8a:2}`).
+
+The F-Droid metadata (`metadata/com.graphhopper.maps.yml` in the external `fdroiddata` repo) **must mirror that formula** via `VercodeOperation: ['%c * 10 + 1', '%c * 10 + 2']` — keep the two in lockstep or the build fails. Screenshots/store graphics also live in `fdroiddata`: `metadata/com.graphhopper.maps/en-US/phoneScreenshots/`.
+
 ## Git Structure
 
 - **Main branch**: `main`

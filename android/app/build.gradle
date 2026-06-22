@@ -1,3 +1,5 @@
+import com.android.build.OutputFile
+
 apply plugin: 'com.android.application'
 
 android {
@@ -21,6 +23,32 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    // Avoid universal large APK bundle (~50MB): split into one APK per ABI
+    // and remove support for x86/x86_64 (emulator/Chromebook only) => ~20-24MB apk.
+    // Reason: the MapLibre GL Native renderer ships a ~10 MB .so library per CPU architecture.
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'arm64-v8a', 'armeabi-v7a'
+            universalApk false
+        }
+    }
+
+    // Each split APK needs a distinct, monotonically-increasing versionCode so the
+    // store (F-Droid / direct) treats them as separate artifacts. Scheme: base*10 + abi,
+    // with arm64 > armeabi-v7a so a 64-bit-capable device prefers the arm64 build.
+    // F-Droid's metadata must mirror this exactly via:
+    //   VercodeOperation: ["%c * 10 + 1", "%c * 10 + 2"]
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def abiOffset = ['armeabi-v7a': 1, 'arm64-v8a': 2].get(output.getFilter(OutputFile.ABI))
+            if (abiOffset != null) {
+                output.versionCodeOverride = variant.versionCode * 10 + abiOffset
+            }
         }
     }
 }
