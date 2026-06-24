@@ -31,11 +31,19 @@ android {
     // and remove support for x86/x86_64 (emulator/Chromebook only) => ~20-24MB apk.
     // Reason: the MapLibre GL Native renderer ships a ~10 MB .so library per CPU architecture.
     def isReleaseBuild = gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }
+
+    // F-Droid builds one ABI per versionCode and passes -Pabi=<single abi> (see metadata/com.graphhopper.maps.yml)
+    // If none is specified all apks will be built.
+    def fdroidAbi = project.findProperty('abi')
     splits {
         abi {
             enable isReleaseBuild
             reset()
-            include 'arm64-v8a', 'armeabi-v7a'
+            if (fdroidAbi) {
+                include fdroidAbi
+            } else {
+                include 'arm64-v8a', 'armeabi-v7a'
+            }
             universalApk false
         }
     }
