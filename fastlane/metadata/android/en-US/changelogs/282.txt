@@ -1,0 +1,3 @@
+ * reduced apk size (was increased since release with Maplibre Navigation SDK)
+ * updated dependencies
+ * several bug fixes
