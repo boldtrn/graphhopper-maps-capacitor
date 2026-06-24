@@ -26,12 +26,14 @@ android {
         }
     }
 
-    // Avoid universal large APK bundle (~50MB): split into one APK per ABI
+    // Universal large APK bundle (~50MB) for debug only (used via `npx cap run android`)
+    // For release split into one APK per ABI
     // and remove support for x86/x86_64 (emulator/Chromebook only) => ~20-24MB apk.
     // Reason: the MapLibre GL Native renderer ships a ~10 MB .so library per CPU architecture.
+    def isReleaseBuild = gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }
     splits {
         abi {
-            enable true
+            enable isReleaseBuild
             reset()
             include 'arm64-v8a', 'armeabi-v7a'
             universalApk false
