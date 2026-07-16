@@ -35,6 +35,9 @@ class GraphHopperRouteFetcher(
         // Force empty snap_preventions to snap on everything, which is important for the current location
         requestJson.put("snap_preventions", JSONArray())
 
+        // additional exit instruction at roundabout
+        requestJson.put("roundabout_exits", true)
+
         // important: do not forget "intersection" otherwise maplibre will throw an exception:
         //        at org.maplibre.navigation.core.navigation.NavigationHelper.findCurrentIntersection(NavigationHelper.kt:378)
         requestJson.put("details", JSONArray().put("max_speed").put("intersection").put("distance").put("time").put("average_speed"))

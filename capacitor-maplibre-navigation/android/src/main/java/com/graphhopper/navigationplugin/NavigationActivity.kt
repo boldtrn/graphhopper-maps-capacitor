@@ -706,6 +706,10 @@ class NavigationActivity : AppCompatActivity() {
             type == StepManeuver.Type.ARRIVE ->
                 if (isFinalLeg) R.drawable.ic_destination_red else R.drawable.ic_destination_blue
             type == StepManeuver.Type.DEPART -> R.drawable.ic_straight
+            // Leaving the roundabout right now — distinct from the entry icons (only icon with an arrowhead)
+            type == StepManeuver.Type.EXIT_ROUNDABOUT || type == StepManeuver.Type.EXIT_ROTARY ->
+                R.drawable.ic_roundabout_exit
+
             isRoundaboutType(type) -> {
                 // Use degrees (angle through roundabout) to determine exit direction
                 if (degrees != null) {
