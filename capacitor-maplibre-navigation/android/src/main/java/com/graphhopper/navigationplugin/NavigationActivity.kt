@@ -93,6 +93,8 @@ class NavigationActivity : AppCompatActivity() {
         // Set to true to simulate GPS along the route instead of using real GPS
         // But for a better fake solution use Lockito or similar
         private const val FAKE_GPS = false
+        // Camera tilt while tracking; higher = flatter view showing more of the road ahead
+        private const val TRACKING_TILT = 60.0
     }
 
     // Map components
@@ -510,7 +512,7 @@ class NavigationActivity : AppCompatActivity() {
         mapLibreMap?.locationComponent?.apply {
             cameraMode = CameraMode.TRACKING_GPS
             zoomWhileTracking(17.0)
-            tiltWhileTracking(45.0)
+            tiltWhileTracking(TRACKING_TILT)
         }
     }
 
@@ -686,7 +688,7 @@ class NavigationActivity : AppCompatActivity() {
             val topPadding = mapView.height * 0.25
             paddingWhileTracking(doubleArrayOf(0.0, topPadding, 0.0, 0.0))
             zoomWhileTracking(17.0)
-            tiltWhileTracking(45.0)
+            tiltWhileTracking(TRACKING_TILT)
         }
     }
 
