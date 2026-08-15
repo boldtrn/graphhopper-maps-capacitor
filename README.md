@@ -2,6 +2,8 @@
 
 This Android app is a [capacitor](https://capacitorjs.com/)-wrapper for the `native-navigation` branch of [GraphHopper Maps](https://github.com/graphhopper/graphhopper-maps). Since version 3.x native navigation is used instead of in-browser navigation.
 
+This application uses the capacitor plugin (see /capacitor-maplibre-navigation) to integrate maplibre navigation with capacitor.
+
 ## Install
 
 We provide automatically generated build artifacts for every commit. You can find them in the [actions tab](https://github.com/boldtrn/graphhopper-maps-capacitor/actions).
