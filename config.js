@@ -5,8 +5,7 @@ const config = {
     navigationTiles: 'Mapilion',
     // various api keys used for the GH backend and the different tile providers
     keys: {
-     "graphhopper":"e96f6517-5a46-4e3d-9773-4956d7b6046f",
-     "maptiler":"_undefined_",
+     "graphhopper":"ed80b021-190b-4cea-86d9-4bca3f6f8890",
      "omniscale":"_undefined_",
      "thunderforest":"4f283c77a8644d0b8ead1a3c3faf04ba",
      "kurviger":"b582abd4-d55d-4cb1-8f34-f4254cd52aa7"
@@ -40,7 +39,7 @@ const config = {
       racingbike: {
         options: [
           { profile: 'racingbike' },
-          { profile: 'ecargobike' } 
+          { profile: 'ecargobike' }
         ]
       },
       truck: {
