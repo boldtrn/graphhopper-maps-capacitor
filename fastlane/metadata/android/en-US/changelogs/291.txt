@@ -1,0 +1,5 @@
+updated map layers
+improved vector tiles support
+improved roundabout turn-by-turn instructions
+quick access context menu (single click or right click)
+several bug fixes
