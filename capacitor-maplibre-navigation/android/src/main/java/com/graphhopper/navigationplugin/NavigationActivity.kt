@@ -54,7 +54,6 @@ import org.maplibre.spatialk.geojson.Position
 import org.maplibre.spatialk.geojson.toJson
 import org.maplibre.spatialk.polyline.PolylineEncoding
 import org.maplibre.navigation.core.location.engine.LocationEngine
-import org.maplibre.navigation.core.location.engine.MapLibreLocationEngine
 import org.maplibre.navigation.core.location.replay.ReplayRouteLocationEngine
 import org.maplibre.navigation.core.utils.Constants
 import org.maplibre.navigation.core.location.toAndroidLocation
@@ -128,6 +127,9 @@ class NavigationActivity : AppCompatActivity() {
     // For temporary storage after permission granted (and later for GraphHopperRouteFetcher)
     private var navigateUrl: String? = null
     private var requestJson: JSONObject? = null
+
+    // Last bearing while moving; reused for puck updates when stationary
+    private var lastBearing = 0f
 
     // Route fetching
     private var routeFetcher: GraphHopperRouteFetcher? = null
@@ -357,11 +359,13 @@ class NavigationActivity : AppCompatActivity() {
                 routeOptions = createWtfObject()
             )
 
-            // MapLibreLocationEngine (not LocationEngineProvider.getBestLocationEngine) so the build stays GMS-free for F-Droid.
+            // LocationManagerEngine (not LocationEngineProvider.getBestLocationEngine) so the build stays GMS-free for F-Droid.
+            // Not the SDK's MapLibreLocationEngine either: its isBetterLocation filter froze the
+            // position and let wrong network fixes through (see LocationManagerEngine docs).
             val locationEngine: LocationEngine = if (FAKE_GPS) {
                 ReplayRouteLocationEngine().also { it.assign(currentRoute!!) }
             } else {
-                MapLibreLocationEngine(applicationContext, Looper.getMainLooper())
+                LocationManagerEngine(applicationContext, Looper.getMainLooper())
             }
 
             // Initialize speech player using route's voice language or device locale
@@ -396,10 +400,18 @@ class NavigationActivity : AppCompatActivity() {
                         val androidLocation = location.toAndroidLocation()
                         updateNavigationUI(androidLocation, routeProgress)
 
-                        // Skip location/camera updates (rotation) when stationary
                         if (androidLocation.speed > 0f) {
+                            lastBearing = androidLocation.bearing
                             mapLibreMap?.locationComponent?.forceLocationUpdate(androidLocation)
+                            // Skip camera updates (rotation) when stationary
                             updateCameraPosition(androidLocation)
+                        } else {
+                            // Still move the puck when stationary (the component has no own
+                            // location engine), but hold the last bearing so GPS noise
+                            // doesn't spin it.
+                            mapLibreMap?.locationComponent?.forceLocationUpdate(
+                                android.location.Location(androidLocation).apply { bearing = lastBearing }
+                            )
                         }
 
                         // Update maneuver arrow
@@ -484,7 +496,10 @@ class NavigationActivity : AppCompatActivity() {
             mapLibreMap?.locationComponent?.apply {
                 activateLocationComponent(
                     LocationComponentActivationOptions.builder(this@NavigationActivity, style)
-                        .useDefaultLocationEngine(!FAKE_GPS) // Use real GPS engine when not faking
+                        // Don't use the default engine: it is MapLibre's fused impl with the buggy
+                        // isBetterLocation filter (frozen/jumping puck). Instead the puck is fed
+                        // exclusively via forceLocationUpdate from the progress listener.
+                        .useDefaultLocationEngine(false)
                         .build()
                 )
                 isLocationComponentEnabled = true
