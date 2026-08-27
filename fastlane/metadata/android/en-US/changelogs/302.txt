@@ -1,0 +1,6 @@
+ * important fix to make GPS working while navigation on all devices
+ * several improvements to via point markers like drag from route
+ * new button to reverse entire route
+ * single click only for context menu
+ * smoother zoom possible after Openlayers update
+ * several other bug fixes
