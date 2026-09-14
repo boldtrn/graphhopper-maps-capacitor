@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Build
+import androidx.core.content.ContextCompat
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
@@ -30,11 +30,8 @@ class MapLibreNavigationPlugin : Plugin() {
     override fun load() {
         super.load()
         val filter = IntentFilter(ACTION_NAVIGATION_CLOSED)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(navigationClosedReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            context.registerReceiver(navigationClosedReceiver, filter)
-        }
+        // ContextCompat also keeps the receiver private below API 33, where the plain overload would export it
+        ContextCompat.registerReceiver(context, navigationClosedReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
     }
 
     override fun handleOnDestroy() {
@@ -64,7 +61,7 @@ class MapLibreNavigationPlugin : Plugin() {
 
     @PluginMethod
     fun stopNavigation(call: PluginCall) {
-        context.sendBroadcast(Intent(ACTION_STOP_NAVIGATION))
+        context.sendBroadcast(Intent(ACTION_STOP_NAVIGATION).setPackage(context.packageName))
         call.resolve()
     }
 }

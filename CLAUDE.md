@@ -67,11 +67,11 @@ interface MapLibreNavigationPlugin {
 
 | Dependency | Version | Notes |
 |------------|---------|-------|
-| MapLibre GL Native | 12.3.0 | Excludes old geojson/turf modules |
-| MapLibre Navigation Core | 5.0.0-pre12 | KMP version, provides geojson-jvm & turf-jvm 7.0.0-pre0 |
-| MapLibre Navigation UI Android | 5.0.0-pre12 | Voice (SpeechPlayer), SpeechAnnouncement |
+| MapLibre GL Native | 13.6.0 | `android-sdk-opengl` (OpenGL ES); the default `android-sdk` is Vulkan since 13.0 and is excluded from the nav deps |
+| MapLibre Navigation Core | 5.0.0 | KMP version, geometry via Spatial-K (`org.maplibre.spatialk`) |
+| MapLibre Navigation UI Android | 5.0.0 | Voice (SpeechPlayer), SpeechAnnouncement |
 | Capacitor Core | ^8.0.0 | |
-| Jetpack Compose BOM | 2025.01.01 | |
+| Jetpack Compose BOM | 2026.06.01 | Last BOM on Compose 1.11; 1.12+ needs compileSdk 37 + AGP 9.1 |
 | Android compileSdk / minSdk | 36 / 24 | Java/Kotlin target: 17 |
 
 ### App icon & splash screen generation

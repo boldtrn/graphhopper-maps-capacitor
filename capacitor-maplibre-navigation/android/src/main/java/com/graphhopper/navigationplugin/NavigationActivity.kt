@@ -198,11 +198,7 @@ class NavigationActivity : AppCompatActivity() {
         val filter = IntentFilter().apply {
             addAction(MapLibreNavigationPlugin.ACTION_STOP_NAVIGATION)
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(broadcastReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(broadcastReceiver, filter)
-        }
+        ContextCompat.registerReceiver(this, broadcastReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
 
         // Parse request from intent
         val url = intent.getStringExtra(MapLibreNavigationPlugin.EXTRA_NAVIGATE_URL)
@@ -816,7 +812,7 @@ class NavigationActivity : AppCompatActivity() {
         } catch (_: Exception) {
         }
         // Notify the plugin that navigation has closed (survives Activity recreation)
-        sendBroadcast(Intent(MapLibreNavigationPlugin.ACTION_NAVIGATION_CLOSED))
+        sendBroadcast(Intent(MapLibreNavigationPlugin.ACTION_NAVIGATION_CLOSED).setPackage(packageName))
         navigation?.stopNavigation()
         navigation?.onDestroy()
         speechPlayer?.onDestroy()

@@ -57,11 +57,11 @@ class LocationManagerEngine(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             // Quality must be set explicitly: the legacy overload below implies balanced power,
             // for which the fused provider never engages GPS (one coarse fix every ~20s)
-            val platformRequest = LocationRequest.Builder(request.minIntervalMilliseconds)
+            val platformRequest = LocationRequest.Builder(request.intervalMilliseconds)
                 .setQuality(
                     when (request.accuracy) {
                         LocationEngine.Request.Accuracy.HIGH -> LocationRequest.QUALITY_HIGH_ACCURACY
-                        LocationEngine.Request.Accuracy.BALANCED -> LocationRequest.QUALITY_BALANCED_POWER_ACCURACY
+                        LocationEngine.Request.Accuracy.MEDIUM -> LocationRequest.QUALITY_BALANCED_POWER_ACCURACY
                         else -> LocationRequest.QUALITY_LOW_POWER
                     }
                 )
@@ -72,7 +72,7 @@ class LocationManagerEngine(
         } else {
             // Pre-31 the provider is GPS, where the implicit quality is irrelevant
             locationManager.requestLocationUpdates(
-                provider, request.minIntervalMilliseconds, request.minUpdateDistanceMeters, listener, looper
+                provider, request.intervalMilliseconds, request.minUpdateDistanceMeters, listener, looper
             )
         }
         awaitClose { locationManager.removeUpdates(listener) }
