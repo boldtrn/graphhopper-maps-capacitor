@@ -1,0 +1,5 @@
+ * allow removal of single favorites
+ * reverse routes in context menu
+ * Upgraded Maplibre dependencies (web; native; navigation)
+ * Upgraded several other dependencies
+ * bug fixes
